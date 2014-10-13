@@ -1,0 +1,28 @@
+{
+    "name": "pcextreme/api",
+    "description": "API toolset",
+    "keywords": [
+        "PCextreme",
+        "API",
+        "Elicit"
+    ],
+    "authors": [
+        {
+            "name": "Kevin Dierkx",
+            "email": "kevin@pcextreme.nl"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/container": "~5.0",
+        "illuminate/contracts": "~5.0",
+        "illuminate/support": "~5.0",
+        "guzzlehttp/guzzle": "~4.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "PCextreme\\Api\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
