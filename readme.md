@@ -1,6 +1,6 @@
-## PCextreme API
+## KevinDierkx Elicit
 
-The PCextreme API component is a REST API toolkit for PHP.
+The Elicit component is a API toolkit for PHP.
 
 ### Usage Instructions
 

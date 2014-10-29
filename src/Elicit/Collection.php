@@ -1,4 +1,4 @@
-<?php namespace PCextreme\Api\Elicit;
+<?php namespace Kevindierkx\Elicit\Elicit;
 
 use Illuminate\Support\Collection as BaseCollection;
 
@@ -9,7 +9,7 @@ class Collection extends BaseCollection {
 	 *
 	 * @param  mixed  $key
 	 * @param  mixed  $default
-	 * @return \PCextreme\Api\Elicit\Model
+	 * @return \Kevindierkx\Elicit\Elicit\Model
 	 */
 	public function find($key, $default = null)
 	{

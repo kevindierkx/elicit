@@ -1,9 +1,9 @@
-<?php namespace PCextreme\Api\Provider;
+<?php namespace Kevindierkx\Elicit\Provider;
 
 use Illuminate\Support\ServiceProvider;
-use PCextreme\Api\ApiManager;
-use PCextreme\Api\Elicit\Model;
-use PCextreme\Api\Connection\ConnectionFactory;
+use Kevindierkx\Elicit\ApiManager;
+use Kevindierkx\Elicit\Elicit\Model;
+use Kevindierkx\Elicit\Connection\ConnectionFactory;
 
 class ApiServiceProvider extends ServiceProvider {
 

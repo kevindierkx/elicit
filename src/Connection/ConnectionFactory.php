@@ -1,4 +1,4 @@
-<?php namespace PCextreme\Api\Connection;
+<?php namespace Kevindierkx\Elicit\Connection;
 
 use Illuminate\Container\Container;
 
@@ -151,7 +151,7 @@ class ConnectionFactory {
 	 * @param  string   $driver
 	 * @param  string   $host
 	 * @param  array    $config
-	 * @return \PCextreme\Api\Connection\Connection
+	 * @return \Kevindierkx\Elicit\Connection\Connection
 	 *
 	 * @throws \InvalidArgumentException
 	 */

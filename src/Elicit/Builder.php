@@ -1,13 +1,13 @@
-<?php namespace PCextreme\Api\Elicit;
+<?php namespace Kevindierkx\Elicit\Elicit;
 
-use PCextreme\Api\Query\Builder as QueryBuilder;
+use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
 
 class Builder {
 
 	/**
 	 * The base query builder instance.
 	 *
-	 * @var \PCextreme\Api\Query\Builder
+	 * @var \Kevindierkx\Elicit\Query\Builder
 	 */
 	protected $query;
 
@@ -35,7 +35,7 @@ class Builder {
 	/**
 	 * Create a new Eloquent query builder instance.
 	 *
-	 * @param  \PCextreme\Api\Query\Builder  $query
+	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
 	 * @return void
 	 */
 	public function __construct(QueryBuilder $query)
@@ -47,7 +47,7 @@ class Builder {
 	 * Find a model by its primary key.
 	 *
 	 * @param  mixed  $id
-	 * @return \PCextreme\Api\Elicit\Model|static|null
+	 * @return \Kevindierkx\Elicit\Elicit\Model|static|null
 	 */
 	public function find($id)
 	{
@@ -65,7 +65,7 @@ class Builder {
 	 *
 	 * @param  array  $id
 	 * @param  array  $columns
-	 * @return \PCextreme\Api\Elicit\Model|Collection|static
+	 * @return \Kevindierkx\Elicit\Elicit\Model|Collection|static
 	 */
 	// public function findMany($id)
 	// {
@@ -85,9 +85,9 @@ class Builder {
 	 *
 	 * @param  mixed  $id
 	 * @param  array  $columns
-	 * @return \PCextreme\Api\Elicit\Model|static
+	 * @return \Kevindierkx\Elicit\Elicit\Model|static
 	 *
-	 * @throws \PCextreme\Api\Elicit\ModelNotFoundException
+	 * @throws \Kevindierkx\Elicit\Elicit\ModelNotFoundException
 	 */
 	public function findOrFail($id)
 	{
@@ -99,7 +99,7 @@ class Builder {
 	/**
 	 * Execute the query and get the first result.
 	 *
-	 * @return \PCextreme\Api\Elicit\Model|static|null
+	 * @return \Kevindierkx\Elicit\Elicit\Model|static|null
 	 */
 	public function first()
 	{
@@ -113,7 +113,7 @@ class Builder {
 	/**
 	 * Execute the query and get the first result or throw an exception.
 	 *
-	 * @return \PCextreme\Api\Elicit\Model|static
+	 * @return \Kevindierkx\Elicit\Elicit\Model|static
 	 *
 	 * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
 	 */
@@ -127,7 +127,7 @@ class Builder {
 	/**
 	 * Execute the query as a "index|show" statement.
 	 *
-	 * @return \PCextreme\Api\Elicit\Collection|static[]
+	 * @return \Kevindierkx\Elicit\Elicit\Collection|static[]
 	 */
 	public function get()
 	{
@@ -161,7 +161,7 @@ class Builder {
 	 * Get the hydrated models without eager loading.
 	 *
 	 * @param  array  $columns
-	 * @return \PCextreme\Api\Elicit\Model[]
+	 * @return \Kevindierkx\Elicit\Elicit\Model[]
 	 */
 	public function getModels()
 	{
@@ -220,7 +220,7 @@ class Builder {
 	/**
 	 * Get the underlying query builder instance.
 	 *
-	 * @return \PCextreme\Api\Query\Builder|static
+	 * @return \Kevindierkx\Elicit\Query\Builder|static
 	 */
 	public function getQuery()
 	{
@@ -230,7 +230,7 @@ class Builder {
 	/**
 	 * Set the underlying query builder instance.
 	 *
-	 * @param  \PCextreme\Api\Query\Builder  $query
+	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
 	 * @return void
 	 */
 	public function setQuery($query)
@@ -241,7 +241,7 @@ class Builder {
 	/**
 	 * Get the model instance being queried.
 	 *
-	 * @return \PCextreme\Api\Elicit\Model
+	 * @return \Kevindierkx\Elicit\Elicit\Model
 	 */
 	public function getModel()
 	{
@@ -251,7 +251,7 @@ class Builder {
 	/**
 	 * Set a model instance for the model being queried.
 	 *
-	 * @param  \PCextreme\Api\Elicit\Model  $model
+	 * @param  \Kevindierkx\Elicit\Elicit\Model  $model
 	 * @return $this
 	 */
 	public function setModel(Model $model)

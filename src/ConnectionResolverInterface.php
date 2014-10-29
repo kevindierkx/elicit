@@ -1,4 +1,4 @@
-<?php namespace PCextreme\Api;
+<?php namespace Kevindierkx\Elicit;
 
 interface ConnectionResolverInterface {
 
@@ -6,7 +6,7 @@ interface ConnectionResolverInterface {
 	 * Get a API connection instance.
 	 *
 	 * @param  string  $name
-	 * @return \PCextreme\Api\Connection
+	 * @return \Kevindierkx\Elicit\Connection
 	 */
 	public function connection($name = null);
 

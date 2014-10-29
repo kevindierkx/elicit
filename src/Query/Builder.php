@@ -1,14 +1,14 @@
-<?php namespace PCextreme\Api\Query;
+<?php namespace Kevindierkx\Elicit\Query;
 
-use PCextreme\Api\Connection\ConnectionInterface;
-use PCextreme\Api\Query\Processors\Processor;
+use Kevindierkx\Elicit\Connection\ConnectionInterface;
+use Kevindierkx\Elicit\Query\Processors\Processor;
 
 class Builder {
 
 	/**
 	 * The API connection instance.
 	 *
-	 * @var \PCextreme\Api\Connection\Connection
+	 * @var \Kevindierkx\Elicit\Connection\Connection
 	 */
 	protected $connection;
 
@@ -36,15 +36,15 @@ class Builder {
 	/**
 	 * The database query post processor instance.
 	 *
-	 * @var \PCextreme\Api\Query\Processors\Processor
+	 * @var \Kevindierkx\Elicit\Query\Processors\Processor
 	 */
 	protected $processor;
 
 	/**
 	 * Create a new reuqets builder instance.
 	 *
-	 * @param  \PCextreme\Api\Connection\ConnectionInterface  $connection
-	 * @param  \PCextreme\Api\Query\Processors\Processor      $processor
+	 * @param  \Kevindierkx\Elicit\Connection\ConnectionInterface  $connection
+	 * @param  \Kevindierkx\Elicit\Query\Processors\Processor      $processor
 	 */
 	public function __construct(
 		ConnectionInterface $connection,
@@ -201,7 +201,7 @@ class Builder {
 	 * Alias to set the "limit" value of the query.
 	 *
 	 * @param  int  $value
-	 * @return \PCextreme\Api\Query\Builder|static
+	 * @return \Kevindierkx\Elicit\Query\Builder|static
 	 */
 	public function take($value)
 	{

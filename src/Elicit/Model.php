@@ -1,4 +1,4 @@
-<?php namespace PCextreme\Api\Elicit;
+<?php namespace Kevindierkx\Elicit\Elicit;
 
 use ArrayAccess;
 use JsonSerializable;
@@ -7,9 +7,9 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Events\Dispatcher;
 
-use PCextreme\Api\Query\Builder as QueryBuilder;
-use PCextreme\Api\Connection\Connection;
-use PCextreme\Api\ConnectionResolverInterface as Resolver;
+use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
+use Kevindierkx\Elicit\Connection\Connection;
+use Kevindierkx\Elicit\ConnectionResolverInterface as Resolver;
 
 abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializable {
 
@@ -100,7 +100,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	/**
 	 * The connection resolver instance.
 	 *
-	 * @var \PCextreme\Api\ConnectionResolverInterface
+	 * @var \Kevindierkx\Elicit\ConnectionResolverInterface
 	 */
 	protected static $resolver;
 
@@ -220,7 +220,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 * Being querying a model with eager loading.
 	 *
 	 * @param  array|string  $relations
-	 * @return \PCextreme\Api\Elicit\Builder|static
+	 * @return \Kevindierkx\Elicit\Elicit\Builder|static
 	 */
 	public static function with($relations)
 	{
@@ -236,7 +236,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	/**
 	 * Begin querying the model.
 	 *
-	 * @return \PCextreme\Api\elicit\Builder
+	 * @return \Kevindierkx\Elicit\elicit\Builder
 	 */
 	public static function query()
 	{
@@ -247,7 +247,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 * Get all of the models from the database.
 	 *
 	 * @param  array  $columns
-	 * @return \PCextreme\Api\Elicit\Collection|static[]
+	 * @return \Kevindierkx\Elicit\Elicit\Collection|static[]
 	 */
 	public static function all()
 	{
@@ -292,7 +292,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 * @param  mixed  $id
 	 * @return \Illuminate\Support\Collection|static
 	 *
-	 * @throws \PCextreme\Api\Elicit\ModelNotFoundException
+	 * @throws \Kevindierkx\Elicit\Elicit\ModelNotFoundException
 	 */
 	public static function findOrFail($id)
 	{
@@ -338,7 +338,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	/**
 	 * Get a new query builder for the model's API.
 	 *
-	 * @return \PCextreme\Api\Elicit\Builder
+	 * @return \Kevindierkx\Elicit\Elicit\Builder
 	 */
 	public function newQuery()
 	{
@@ -357,8 +357,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	/**
 	 * Create a new Elicit query builder for the model.
 	 *
-	 * @param  \PCextreme\Api\Query\Builder  $query
-	 * @return \PCextreme\Api\Builder|static
+	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
+	 * @return \Kevindierkx\Elicit\Builder|static
 	 */
 	public function newElicitBuilder($query)
 	{
@@ -368,7 +368,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	/**
 	 * Get a new query builder instance for the connection.
 	 *
-	 * @return \PCextreme\Api\Query\Builder
+	 * @return \Kevindierkx\Elicit\Query\Builder
 	 */
 	protected function newBaseQueryBuilder()
 	{
@@ -381,7 +381,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 * Create a new Elicit Collection instance.
 	 *
 	 * @param  array  $models
-	 * @return \PCextreme\Api\Elicit\Collection
+	 * @return \Kevindierkx\Elicit\Elicit\Collection
 	 */
 	public function newCollection(array $models = array())
 	{

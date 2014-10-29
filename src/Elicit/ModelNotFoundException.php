@@ -1,4 +1,4 @@
-<?php namespace PCextreme\Api\Elicit;
+<?php namespace Kevindierkx\Elicit\Elicit;
 
 class ModelNotFoundException extends \RuntimeException {
 

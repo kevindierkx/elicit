@@ -1,11 +1,11 @@
-<?php namespace PCextreme\Api\Connection;
+<?php namespace Kevindierkx\Elicit\Connection;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 
 use Illuminate\Contracts\Events\Dispatcher;
-use PCextreme\Api\Query\Processors\Processor;
-use PCextreme\Api\Query\Processors\FractalProcessor;
+use Kevindierkx\Elicit\Query\Processors\Processor;
+use Kevindierkx\Elicit\Query\Processors\FractalProcessor;
 
 class Connection implements ConnectionInterface {
 
@@ -38,7 +38,7 @@ class Connection implements ConnectionInterface {
 	/**
 	 * The query post processor implementation.
 	 *
-	 * @var \PCextreme\Api\Query\Processors\Processor
+	 * @var \Kevindierkx\Elicit\Query\Processors\Processor
 	 */
 	protected $postProcessor;
 
@@ -80,7 +80,7 @@ class Connection implements ConnectionInterface {
 	/**
 	 * Get the default post processor instance.
 	 *
-	 * @return \PCextreme\Api\Query\Processors\Processor
+	 * @return \Kevindierkx\Elicit\Query\Processors\Processor
 	 */
 	protected function getDefaultPostProcessor()
 	{

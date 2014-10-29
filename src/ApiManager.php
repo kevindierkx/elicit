@@ -1,8 +1,8 @@
-<?php namespace PCextreme\Api;
+<?php namespace Kevindierkx\Elicit;
 
 use Illuminate\Support\Str;
-use PCextreme\Api\Connection\Connection;
-use PCextreme\Api\Connection\ConnectionFactory;
+use Kevindierkx\Elicit\Connection\Connection;
+use Kevindierkx\Elicit\Connection\ConnectionFactory;
 
 class ApiManager implements ConnectionResolverInterface {
 
@@ -16,7 +16,7 @@ class ApiManager implements ConnectionResolverInterface {
 	/**
 	 * The database connection factory instance.
 	 *
-	 * @var \PCextreme\Api\Connection\ConnectionFactory
+	 * @var \Kevindierkx\Elicit\Connection\ConnectionFactory
 	 */
 	protected $factory;
 
@@ -38,7 +38,7 @@ class ApiManager implements ConnectionResolverInterface {
 	 * Create a new database manager instance.
 	 *
 	 * @param  \Illuminate\Foundation\Application  $app
-	 * @param  \PCextreme\Api\Connection\ConnectionFactory  $factory
+	 * @param  \Kevindierkx\Elicit\Connection\ConnectionFactory  $factory
 	 * @return void
 	 */
 	public function __construct($app, ConnectionFactory $factory)
@@ -148,7 +148,7 @@ class ApiManager implements ConnectionResolverInterface {
 	 * Make the API connection instance.
 	 *
 	 * @param  string  $name
-	 * @return \PCextreme\Api\Connection\Connection
+	 * @return \Kevindierkx\Elicit\Connection\Connection
 	 */
 	protected function makeConnection($name)
 	{
@@ -176,8 +176,8 @@ class ApiManager implements ConnectionResolverInterface {
 	/**
 	 * Prepare the database connection instance.
 	 *
-	 * @param  \PCextreme\Api\Connection\Connection  $connection
-	 * @return \PCextreme\Api\Connection\Connection
+	 * @param  \Kevindierkx\Elicit\Connection\Connection  $connection
+	 * @return \Kevindierkx\Elicit\Connection\Connection
 	 */
 	protected function prepare(Connection $connection)
 	{

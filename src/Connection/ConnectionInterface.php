@@ -1,4 +1,4 @@
-<?php namespace PCextreme\Api\Connection;
+<?php namespace Kevindierkx\Elicit\Connection;
 
 interface ConnectionInterface {
 

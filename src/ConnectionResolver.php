@@ -1,4 +1,4 @@
-<?php namespace PCextreme\Api;
+<?php namespace Kevindierkx\Elicit;
 
 class ConnectionResolver implements ConnectionResolverInterface {
 

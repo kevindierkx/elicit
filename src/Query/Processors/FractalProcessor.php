@@ -1,13 +1,13 @@
-<?php namespace PCextreme\Api\Query\Processors;
+<?php namespace Kevindierkx\Elicit\Query\Processors;
 
-use PCextreme\Api\Query\Builder;
+use Kevindierkx\Elicit\Query\Builder;
 
 class FractalProcessor extends Processor {
 
 	/**
 	 * Process the results of an API request.
 	 *
-	 * @param  \PCextreme\Api\Query\Builder  $query
+	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
 	 * @param  array  $results
 	 * @return array
 	 */

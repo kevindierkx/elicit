@@ -1,10 +1,10 @@
 {
-    "name": "pcextreme/api",
+    "name": "kevindierkx/elicit",
     "description": "API toolset",
     "keywords": [
-        "PCextreme",
-        "API",
-        "Elicit"
+        "kevindierkx",
+        "elicit",
+        "api"
     ],
     "authors": [
         {
@@ -21,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "PCextreme\\Api\\": "src/"
+            "Kevindierkx\\Elicit\\": "src/"
         }
     },
     "minimum-stability": "stable"
