@@ -1,39 +1,28 @@
 <?php namespace Kevindierkx\Elicit\Connection;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
-
+use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
+use Kevindierkx\Elicit\QueryException;
+use Kevindierkx\Elicit\Connector\Connector;
+use Kevindierkx\Elicit\Query\Grammars\Grammar;
 use Kevindierkx\Elicit\Query\Processors\Processor;
-use Kevindierkx\Elicit\Query\Processors\FractalProcessor;
+use GuzzleHttp\Exception\ClientException;
 
 class Connection implements ConnectionInterface {
 
-	const METHOD_GET     = 'GET';
-
-	const METHOD_POST    = 'POST';
-
-	const METHOD_PUT     = 'PUT';
-
-	const METHOD_PATCH   = 'PATCH';
-
-	const METHOD_DELETE  = 'DELETE';
-
-	const METHOD_OPTIONS = 'OPTIONS';
+	/**
+	 * The active connector instance.
+	 *
+	 * @var \Kevindierkx\Elicit\Connector\Connector
+	 */
+	protected $connector;
 
 	/**
-	 * The host URL where API request will be called.
+	 * The query grammar implementation.
 	 *
-	 * @var string
+	 * @var \Kevindierkx\Elicit\Query\Grammars\Grammar
 	 */
-	protected $host;
-
-	/**
-	 * The API connection configuration options.
-	 *
-	 * @var array
-	 */
-	protected $config = array();
+	protected $queryGrammar;
 
 	/**
 	 * The query post processor implementation.
@@ -50,21 +39,64 @@ class Connection implements ConnectionInterface {
 	protected $events;
 
 	/**
+	 * All of the queries ran against the connection.
+	 *
+	 * @var array
+	 */
+	protected $queryLog = array();
+
+	/**
+	 * Indicates whether queries are being logged.
+	 *
+	 * @var bool
+	 */
+	protected $loggingQueries = false;
+
+	/**
+	 * The API connection configuration options.
+	 *
+	 * @var array
+	 */
+	protected $config = array();
+
+	/**
 	 * Create new API connection instance.
 	 *
-	 * @param string  $host
+	 * @param \Kevindierkx\Elicit\Connector\Connector  $connector
 	 * @param array   $config
 	 */
-	public function __construct($host, $config)
+	public function __construct($connector, $config)
 	{
-		$this->host = $host;
+		$this->connector = $connector;
 
 		$this->config = $config;
 
-		// We need to initialize a query post processors
-		// which is a very important part of the API abstractions
+		// We need to initialize a query grammar and the query post processors
+		// which are both very important parts of the API abstractions
 		// so we initialize these to their default values while starting.
+		$this->useDefaultQueryGrammar();
+
 		$this->useDefaultPostProcessor();
+	}
+
+	/**
+	 * Set the query grammar to the default implementation.
+	 *
+	 * @return void
+	 */
+	public function useDefaultQueryGrammar()
+	{
+		$this->queryGrammar = $this->getDefaultQueryGrammar();
+	}
+
+	/**
+	 * Get the default query grammar instance.
+	 *
+	 * @return \Kevindierkx\Elicit\Query\Grammars\Grammar
+	 */
+	protected function getDefaultQueryGrammar()
+	{
+		return new Grammar;
 	}
 
 	/**
@@ -84,141 +116,67 @@ class Connection implements ConnectionInterface {
 	 */
 	protected function getDefaultPostProcessor()
 	{
-		$hasPocessorConfig = isset($this->config['processor']);
-
-		// When the connection config has a processor we will try
-		// to validate the given processor.
-		if ($hasPocessorConfig) {
-
-			$processor = $this->config['processor'];
-
-			// If the processor is a class and instance of Processor
-			// well return it here.
-			if (class_exists($processor) && $processor instanceof Processor) {
-				return new $processor;
-			}
-
-			// Here well assume the given processor is the identifier of a default
-			// processor. Well look it up here and return it when available.
-			else {
-				switch ($processor) {
-					case 'fractal':
-						return new FractalProcessor;
-				}
-			}
-
-			throw new \InvalidArgumentException("Unsupported processor [$processor]");
-		}
-
 		return new Processor;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function get($path, $query = array())
+	public function request(array $query)
 	{
-		return $this->request(self::METHOD_GET, $path, $query);
+		return $this->run($query, function($query)
+		{
+			$connector = $this->getConnector()->prepare($query);
+
+			return $connector->execute();
+		});
 	}
 
 	/**
-	 * {@inheritdoc}
-	 */
-	public function post($path, $query = array(), $postBody = array())
-	{
-		return $this->request(self::METHOD_POST, $path, $query, $postBody);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function put($path, $query = array(), $postBody = array())
-	{
-		return $this->request(self::METHOD_PUT, $path, $query, $postBody);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function patch($path, $query = array(), $postBody = array())
-	{
-		return $this->request(self::METHOD_PATCH, $path, $query, $postBody);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function delete($path, $query = array())
-	{
-		return $this->request(self::METHOD_DELETE, $path, $query);
-	}
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public function options($path, $query = array())
-	{
-		return $this->request(self::METHOD_OPTIONS, $path, $query);
-	}
-
-	protected function request($method, $path, $query = array(), $postBody = array())
-	{
-		$hasNamedParameters = $this->hasNamedParameters($path);
-
-		if ($hasNamedParameters) {
-			$path = $this->replaceNamedParameters($path, $query);
-		}
-
-		return $this->execute($method, $path, $query, $postBody);
-	}
-
-	/**
-	 * Execute an API request and log its execution context.
+	 * Run a SQL statement and log its execution context.
 	 *
-	 *
+	 * @param  array     $query
+	 * @param  \Closure  $callback
+	 * @return array
 	 */
-	protected function execute($method, $path, $query = array(), $postBody = array())
+	protected function run(array $query, Closure $callback)
 	{
-		$requestUrl = $this->host . $path;
+		$start = microtime(true);
 
+		// Here we will run this query. If an exception occurs we'll determine a
+		// few basic scenarios and create an appropriate response for them.
+		$result = $this->runQueryCallback($query, $callback);
+
+		// Once we have ran the query we will calculate the time that it took to run and
+		// then log the query and execution time so we will report them on
+		// the event that the developer needs them. We'll log time in milliseconds.
+		$time = $this->getElapsedTime($start);
+
+		$this->logQuery($query, $time);
+
+		return $result;
+	}
+
+	/**
+	 * Run a SQL statement.
+	 *
+	 * @param  string    $query
+	 * @param  \Closure  $callback
+	 * @return array
+	 *
+	 * @throws \Kevindierkx\Elicit\Connection\InvalidCredentialsException
+	 *
+	 * @throws \GuzzleHttp\Exception\RequestException
+	 * @throws \GuzzleHttp\Exception\ClientException  400 Errors
+	 * @throws \GuzzleHttp\Exception\ServerException  500 Errors
+	 * @throws \GuzzleHttp\Exception\TooManyRedirectsException
+	 */
+	protected function runQueryCallback(array $query, Closure $callback)
+	{
 		try {
-			$client = new Client;
-			$request = $client->createRequest($method, $requestUrl);
-			$params = $request->getQuery();
-
-			// Set query params
-			foreach ($query as $key => $value) {
-				$params->set($key, $value);
-			}
-
-			// Set post body when set
-			if (! empty($postBody)) {
-				$requestBody = $request->getBody();
-
-				foreach ($postBody as $item) {
-					if (
-						! isset($item['name']) ||
-						! isset($item['value'])
-					) {
-						throw new InvalidArgumentException("The provided body is invalid.");
-					}
-
-					if (
-						isset($item['type']) &&
-						$item['type'] == 'file'
-					) {
-						$requestBody->addFile(new PostFile($item['name'], fopen($item['value'], 'r')));
-					} else {
-						$requestBody->setField($item['name'], $item['value']);
-					}
-				}
-			}
-
-			return $client->send($request)->json();
+			$result = $callback($query);
 		} catch (ClientException $e) {
-			$response   = $e->getResponse();
-
-			$statusCode = $response->getStatusCode();
+			$statusCode = $e->getResponse()->getStatusCode();
 
 			switch($statusCode) {
 				// When we receive a 401 status code from the API well assume
@@ -233,78 +191,132 @@ class Connection implements ConnectionInterface {
 				case '404':
 					return array();
 
-				//
-				// TODO: Something went wrong during the request.
-				//
 				default:
-					throw new RuntimeException("Something went wrong [" . $response->getReasonPhrase() . "]");
+					return $e;
 			}
 		}
+
+		return $result;
 	}
 
 	/**
-	 * Check for named parameters in the path.
+	 * Log a query in the connection's query log.
 	 *
-	 * @param  string  $path
-	 * @return boolean
+	 * @param  string  $query
+	 * @param  $time
+	 * @return void
 	 */
-	protected function hasNamedParameters($path)
+	public function logQuery($query, $time = null)
 	{
-		return preg_match('/\{(.*?)\??\}/', $path);
+		if (isset($this->events)) {
+			$this->events->fire('elicit.query', [$query, $time, $this->getName()]);
+		}
+
+		if (! $this->loggingQueries) return;
+
+		$this->queryLog[] = compact('query', 'time');
 	}
 
 	/**
-	 * Replace all of the named parameters in the path.
-	 * Removes them from the query in the process.
+	 * Get the elapsed time since a given starting point.
 	 *
-	 * @param  string  $path
-	 * @param  array   $query
+	 * @param  int    $start
+	 * @return float
+	 */
+	protected function getElapsedTime($start)
+	{
+		return round((microtime(true) - $start) * 1000, 2);
+	}
+
+	/**
+	 * Get the current API connector.
+	 *
+	 * @return \Kevindierkx\Elicit\Connector\Connector
+	 */
+	public function getConnector()
+	{
+		return $this->connector;
+	}
+
+	/**
+	 * Set the API connector.
+	 *
+	 * @param  \Kevindierkx\Elicit\Connector\Connector|null  $connector
+	 * @return $this
+	 */
+	public function setConnector($connector)
+	{
+		$this->connector = $connector;
+
+		return $this;
+	}
+
+	/**
+	 * Get the API connection name.
+	 *
+	 * @return string|null
+	 */
+	public function getName()
+	{
+		return $this->getConfig('name');
+	}
+
+	/**
+	 * Get an option from the configuration options.
+	 *
+	 * @param  string  $option
+	 * @return mixed
+	 */
+	public function getConfig($option)
+	{
+		return array_get($this->config, $option);
+	}
+
+	/**
+	 * Get the connection driver name.
+	 *
 	 * @return string
-	 *
-	 * @throws \InvalidArgumentException
 	 */
-	protected function replaceNamedParameters($path, array &$query = array())
+	public function getDriverName()
 	{
-		return preg_replace_callback('/\{(.*?)\??\}/', function($m) use (&$query) {
-			if (isset($query[$m[1]])) {
-				$parameter = $query[$m[1]];
-
-				unset($query[$m[1]]);
-
-				return $parameter;
-			}
-
-			// When the named parameter is not provided in the wheres array
-			// well stop here. Named parameters are most likely required for
-			// the request.
-			throw new \InvalidArgumentException("Named parameter [$m[1]] missing from request for path [$path]");
-		}, $path);
+		return $this->getConfig('driver');
 	}
 
 	/**
-	 * Get host URL.
+	 * Get the connection authentication name.
 	 *
 	 * @return string
 	 */
-	public function getHost()
+	public function getAuthName()
 	{
-		return $this->host;
+		return $this->getConfig('auth');
 	}
 
 	/**
-	 * Set host URL.
+	 * Get the query grammar used by the connection.
 	 *
-	 * @param  string  $host
+	 * @return \Kevindierkx\Elicit\Query\Grammars\Grammar
 	 */
-	public function setHost($host)
+	public function getQueryGrammar()
 	{
-		$this->host = $host;
+		return $this->queryGrammar;
+	}
+
+	/**
+	 * Set the query grammar used by the connection.
+	 *
+	 * @param  \Kevindierkx\Elicit\Query\Grammars\Grammar
+	 * @return void
+	 */
+	public function setQueryGrammar(Grammar $grammar)
+	{
+		$this->queryGrammar = $grammar;
 	}
 
 	/**
 	 * Get the query post processor used by the connection.
 	 *
-	 * @return \Illuminate\Database\Query\Processors\Processor
+	 * @return \Kevindierkx\Elicit\Query\Processors\Processor
 	 */
 	public function getPostProcessor()
 	{
@@ -314,7 +326,7 @@ class Connection implements ConnectionInterface {
 	/**
 	 * Set the query post processor used by the connection.
 	 *
-	 * @param  \Illuminate\Database\Query\Processors\Processor
+	 * @return \Kevindierkx\Elicit\Query\Processors\Processor
 	 * @return void
 	 */
 	public function setPostProcessor(Processor $processor)

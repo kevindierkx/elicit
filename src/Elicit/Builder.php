@@ -131,6 +131,17 @@ class Builder {
 	 */
 	public function get()
 	{
+		$hasFrom = ! is_null($this->query->from);
+
+		// When no from has been specified at this point the developer
+		// tries to do a basic where query. In this case we want to use the index
+		// path, since the index path is supposed to return collections.
+		if (! $hasFrom) {
+			$path = $this->model->getPath('index');
+
+			$this->query->from($path);
+		}
+
 		$models = $this->getModels();
 
 		// ... Eager load relations

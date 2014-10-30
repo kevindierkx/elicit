@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Str;
 use Kevindierkx\Elicit\Connection\Connection;
-use Kevindierkx\Elicit\Connection\ConnectionFactory;
+use Kevindierkx\Elicit\ConnectionFactory;
 
 class ApiManager implements ConnectionResolverInterface {
 
@@ -44,6 +44,7 @@ class ApiManager implements ConnectionResolverInterface {
 	public function __construct($app, ConnectionFactory $factory)
 	{
 		$this->app = $app;
+
 		$this->factory = $factory;
 	}
 

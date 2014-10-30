@@ -3,9 +3,9 @@
 use Illuminate\Support\ServiceProvider;
 use Kevindierkx\Elicit\ApiManager;
 use Kevindierkx\Elicit\Elicit\Model;
-use Kevindierkx\Elicit\Connection\ConnectionFactory;
+use Kevindierkx\Elicit\ConnectionFactory;
 
-class ApiServiceProvider extends ServiceProvider {
+class ElicitServiceProvider extends ServiceProvider {
 
 	/**
 	 * Bootstrap the application events.

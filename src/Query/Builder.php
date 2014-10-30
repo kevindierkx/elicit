@@ -1,6 +1,8 @@
 <?php namespace Kevindierkx\Elicit\Query;
 
+use Closure;
 use Kevindierkx\Elicit\Connection\ConnectionInterface;
+use Kevindierkx\Elicit\Query\Grammars\Grammar;
 use Kevindierkx\Elicit\Query\Processors\Processor;
 
 class Builder {
@@ -13,25 +15,11 @@ class Builder {
 	protected $connection;
 
 	/**
-	 * The path which the query is targeting.
+	 * The API query grammar instance.
 	 *
-	 * @var array
+	 * @var \Kevindierkx\Elicit\Query\Grammars\Grammar
 	 */
-	public $from = array();
-
-	/**
-	 * The query parameters for the request.
-	 *
-	 * @var array
-	 */
-	public $wheres = array();
-
-	/**
-	 * The maximum number of records to return.
-	 *
-	 * @var int
-	 */
-	public $limit;
+	protected $grammar;
 
 	/**
 	 * The database query post processor instance.
@@ -41,17 +29,43 @@ class Builder {
 	protected $processor;
 
 	/**
+	 * The path which the query is targeting.
+	 *
+	 * @var array
+	 */
+	public $from;
+
+	/**
+	 * The query parameters for the request.
+	 *
+	 * @var array
+	 */
+	public $wheres;
+
+	/**
+	 * The maximum number of records to return.
+	 *
+	 * @var int
+	 */
+	public $limit;
+
+	/**
 	 * Create a new reuqets builder instance.
 	 *
 	 * @param  \Kevindierkx\Elicit\Connection\ConnectionInterface  $connection
+	 * @param  \Kevindierkx\Elicit\Query\Grammars\Grammar          $grammar
 	 * @param  \Kevindierkx\Elicit\Query\Processors\Processor      $processor
 	 */
 	public function __construct(
 		ConnectionInterface $connection,
+		Grammar $grammar,
 		Processor $processor
 	)
 	{
 		$this->connection = $connection;
+
+		$this->grammar = $grammar;
+
 		$this->processor = $processor;
 	}
 
@@ -80,68 +94,24 @@ class Builder {
 	}
 
 	/**
-	 * Execute the query as a "index|show" statement.
+	 * Execute the query.
 	 *
 	 * @param  array  $columns
 	 * @return array|static[]
 	 */
 	public function get()
 	{
-		// TODO: ... We could add some caching here.
-
-		return $this->getFresh();
-	}
-
-	/**
-	 * Execute the query as a fresh "index|show" statement.
-	 *
-	 * @return array|static[]
-	 */
-	public function getFresh()
-	{
 		return $this->processor->processRequest($this, $this->runRequest());
 	}
 
 	/**
-	 * Run the query statement against the connection.
+	 * Run the query against the connection.
 	 *
 	 * @return array
 	 */
 	protected function runRequest()
 	{
-		$hasPath   = isset($this->from['path']);
-
-		$hasMethod = isset($this->from['method']);
-
-		// When no path or method has been provided the developer tries to run
-		// a request using the query builder or is using a custom path. In this
-		// case the request path and method need to be provided before running a request.
-		if (! $hasPath || ! $hasMethod) {
-			throw new \RuntimeException(
-				"The request path and method need to be provided before running a request."
-			);
-		}
-
-		$path   = $this->from['path'];
-
-		$method = $this->from['method'];
-
-		switch ($method) {
-			case 'GET':
-				return $this->connection->get($path, $this->wheres);
-			case 'POST':
-				return 'post';
-			case 'PUT':
-				return 'put';
-			case 'PATCH':
-				return 'patch';
-			case 'DELETE':
-				return 'delete';
-			case 'OPTIONS':
-				return 'options';
-		}
-
-		throw new \InvalidArgumentException("Unsupported request method [$method]");
+		return $this->connection->request($this->toRequest($this));
 	}
 
 	/**
@@ -160,26 +130,63 @@ class Builder {
 	/**
 	 * Add a basic where clause to the query.
 	 *
-	 * @param  string  $key
+	 * @param  string  $column
 	 * @param  mixed   $value
 	 * @return $this
 	 */
-	public function where($key, $value = null)
+	public function where($column, $value = null)
 	{
-		// TODO: Add support for arrays.
-
 		// If the column is an array, we will assume it is an array of key-value pairs
-		// and can add them each as a where clause. We will maintain the boolean we
-		// received when the method was called and pass it into the nested where.
-		// if (is_array($column)) {
-		// 	return $this->whereNested(function($query) use ($column) {
-		// 		foreach ($column as $key => $value) {
-		// 			$query->where($key, '=', $value);
-		// 		}
-		// 	}, $boolean);
-		// }
+		// and can add them each as a where clause.
+		if (is_array($column)) {
+			return $this->whereNested(function($query) use ($column) {
+				foreach ($column as $key => $value) {
+					$query->where($key, $value);
+				}
+			});
+		}
 
-		$this->wheres[$key] = $value;
+		// For simple wheres we just add them to the array.
+		$this->wheres[] = compact('column', 'value');
+
+		return $this;
+	}
+
+	/**
+	 * Add a nested where statement to the query.
+	 *
+	 * @param  \Closure $callback
+	 * @return \Kevindierkx\Elicit\Query\Builder|static
+	 */
+	public function whereNested(Closure $callback)
+	{
+		// To handle nested queries we'll actually create a brand new query instance
+		// and pass it off to the Closure that we have. The Closure can simply do
+		// do whatever it wants to a query then we will store it for compiling.
+		$query = $this->newQuery();
+
+		// The nested query does not have the from field set. At this point we don't
+		// have the required information about the from field to set it. This is
+		// however not a problem since all requests go to the same endpoint.
+
+		call_user_func($callback, $query);
+
+		return $this->addNestedWhereQuery($query);
+	}
+
+	/**
+	 * Merge another query builder wheres with the query builder wheres.
+	 *
+	 * @param  \Kevindierkx\Elicit\Query\Builder|static $query
+	 * @return $this
+	 */
+	public function addNestedWhereQuery($query)
+	{
+		if (count($query->wheres)) {
+			$wheres = $this->wheres ?: array();
+
+			$this->wheres = array_merge($wheres, $query->wheres);
+		}
 
 		return $this;
 	}
@@ -206,6 +213,56 @@ class Builder {
 	public function take($value)
 	{
 		return $this->limit($value);
+	}
+
+	/**
+	 * Get a new instance of the query builder.
+	 *
+	 * @return \Kevindierkx\Elicit\Query\Builder
+	 */
+	public function newQuery()
+	{
+		return new Builder($this->connection, $this->grammar, $this->processor);
+	}
+
+	/**
+	 * Parse the request representation of the query.
+	 *
+	 * @return array
+	 */
+	public function toRequest()
+	{
+		return $this->grammar->compileRequest($this);
+	}
+
+	/**
+	 * Get the database connection instance.
+	 *
+	 * @return \Kevindierkx\Elicit\ConnectionInterface
+	 */
+	public function getConnection()
+	{
+		return $this->connection;
+	}
+
+	/**
+	 * Get the database query processor instance.
+	 *
+	 * @return \Kevindierkx\Elicit\Query\Processors\Processor
+	 */
+	public function getProcessor()
+	{
+		return $this->processor;
+	}
+
+	/**
+	 * Get the query grammar instance.
+	 *
+	 * @return \Kevindierkx\Elicit\Query\Grammars\Grammar
+	 */
+	public function getGrammar()
+	{
+		return $this->grammar;
 	}
 
 	/**

@@ -7,9 +7,8 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Events\Dispatcher;
 
-use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
-use Kevindierkx\Elicit\Connection\Connection;
 use Kevindierkx\Elicit\ConnectionResolverInterface as Resolver;
+use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
 
 abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializable {
 
@@ -40,12 +39,12 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 * @var array
 	 */
 	protected $defaults = [
-		'index'   => ['method' => Connection::METHOD_GET],
-		'show'    => ['method' => Connection::METHOD_GET],
-		'store'   => ['method' => Connection::METHOD_POST],
-		'update'  => ['method' => Connection::METHOD_PUT],
-		'destroy' => ['method' => Connection::METHOD_DELETE],
-		'options' => ['method' => Connection::METHOD_OPTIONS],
+		'index'   => ['method' => 'GET'],
+		'show'    => ['method' => 'GET'],
+		'store'   => ['method' => 'POST'],
+		'update'  => ['method' => 'PUT'],
+		'destroy' => ['method' => 'DELETE'],
+		'options' => ['method' => 'OPTIONS'],
 	];
 
 	/**
@@ -374,7 +373,11 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$conn = $this->getConnection();
 
-		return new QueryBuilder($conn, $conn->getPostProcessor());
+		$grammar = $conn->getQueryGrammar();
+
+		$processor = $conn->getPostProcessor();
+
+		return new QueryBuilder($conn, $grammar, $processor);
 	}
 
 	/**
