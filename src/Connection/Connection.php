@@ -7,6 +7,7 @@ use Kevindierkx\Elicit\Connector\Connector;
 use Kevindierkx\Elicit\Query\Grammars\Grammar;
 use Kevindierkx\Elicit\Query\Processors\Processor;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 
 class Connection implements ConnectionInterface {
 
@@ -165,10 +166,10 @@ class Connection implements ConnectionInterface {
 	 * @return array
 	 *
 	 * @throws \Kevindierkx\Elicit\Connection\InvalidCredentialsException
+	 * @throws \Kevindierkx\Elicit\QueryException
 	 *
 	 * @throws \GuzzleHttp\Exception\RequestException
 	 * @throws \GuzzleHttp\Exception\ClientException  400 Errors
-	 * @throws \GuzzleHttp\Exception\ServerException  500 Errors
 	 * @throws \GuzzleHttp\Exception\TooManyRedirectsException
 	 */
 	protected function runQueryCallback(array $query, Closure $callback)
@@ -194,6 +195,8 @@ class Connection implements ConnectionInterface {
 				default:
 					return $e;
 			}
+		} catch (ServerException $e) {
+			throw new QueryException($query, $e);
 		}
 
 		return $result;
