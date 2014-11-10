@@ -89,12 +89,39 @@ class Grammar extends AbstractGrammar {
 				$request[$where['column']] = $where['value'];
 			}
 
+			// Here we create the query string. Some APIs (Graphite) support multiple
+			// parameters with the same key. When we find an entry with multiple values
+			// well add it multiple times to the query.
 			if (count($request) > 0) {
-				return http_build_query($request, false, '&', PHP_QUERY_RFC3986);
+				$requestString = null;
+
+				foreach ($request as $key => $value) {
+					if (is_array($value)) {
+						foreach ($value as $attribute) {
+							$requestString .= $this->buildQuery($key, $attribute);
+						}
+					} else {
+						$requestString .= $this->buildQuery($key, $value);
+					}
+				}
+
+				return substr($requestString, 1, strlen($requestString));
 			}
 		}
 
 		return '';
+	}
+
+	/**
+	 * Build url encoded portion of the query.
+	 *
+	 * @param  string  $key
+	 * @param  string  $value
+	 * @return string
+	 */
+	protected function buildQuery($key, $value)
+	{
+		return '&' . $key . '=' . urlencode($value);
 	}
 
 }
