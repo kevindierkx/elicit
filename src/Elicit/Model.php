@@ -661,16 +661,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
-	 * Get all of the current attributes on the model.
-	 *
-	 * @return array
-	 */
-	public function getAttributes()
-	{
-		return $this->attributes;
-	}
-
-	/**
 	 * Set the array of model attributes. No checking is done.
 	 *
 	 * @param  array  $attributes
@@ -722,15 +712,13 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
-	 * Set a given attribute on the model.
+	 * Get all of the current attributes on the model.
 	 *
-	 * @param  string  $key
-	 * @param  mixed   $value
-	 * @return void
+	 * @return array
 	 */
-	public function setAttribute($key, $value)
+	public function getAttributes()
 	{
-		$this->attributes[$key] = $value;
+		return $this->attributes;
 	}
 
 	/**
@@ -776,6 +764,18 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
+	 * Set a given attribute on the model.
+	 *
+	 * @param  string  $key
+	 * @param  mixed   $value
+	 * @return void
+	 */
+	public function setAttribute($key, $value)
+	{
+		$this->attributes[$key] = $value;
+	}
+
+	/**
 	 * Get a plain attribute (not a relationship).
 	 *
 	 * @param  string  $key
@@ -809,6 +809,21 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	protected function getArrayableAttributes()
 	{
 		return $this->getArrayableItems($this->attributes);
+	}
+
+	/**
+	 * Get an attribute array of all arrayable values.
+	 *
+	 * @param  array  $values
+	 * @return array
+	 */
+	protected function getArrayableItems(array $values)
+	{
+		if (count($this->visible) > 0) {
+			return array_intersect_key($values, array_flip($this->visible));
+		}
+
+		return array_diff_key($values, array_flip($this->hidden));
 	}
 
 	/**
@@ -943,21 +958,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		$attributes = $this->attributesToArray();
 
 		return $attributes;
-	}
-
-	/**
-	 * Get an attribute array of all arrayable values.
-	 *
-	 * @param  array  $values
-	 * @return array
-	 */
-	protected function getArrayableItems(array $values)
-	{
-		if (count($this->visible) > 0) {
-			return array_intersect_key($values, array_flip($this->visible));
-		}
-
-		return array_diff_key($values, array_flip($this->hidden));
 	}
 
 	/**
