@@ -193,7 +193,7 @@ class Connection implements ConnectionInterface {
 					return array();
 
 				default:
-					return $e;
+					throw $e;
 			}
 		} catch (ServerException $e) {
 			throw new QueryException($query, $e);
