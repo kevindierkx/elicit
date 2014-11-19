@@ -76,6 +76,13 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	protected $original = array();
 
 	/**
+	 * The loaded relationships for the model.
+	 *
+	 * @var array
+	 */
+	protected $relations = array();
+
+	/**
 	 * The relations to eager load on every query.
 	 *
 	 * @var array
@@ -772,7 +779,37 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	public function setAttribute($key, $value)
 	{
+		// We will check for the presence of a mutator for the set operation
+		// which simply lets the developers tweak the attribute as it is set on
+		// the model, such as "json_encoding" an listing of data for storage.
+		if ($this->hasSetMutator($key)) {
+			$method = 'set'.studly_case($key).'Attribute';
+			return $this->{$method}($value);
+		}
+
 		$this->attributes[$key] = $value;
+	}
+
+	/**
+	 * Determine if a get mutator exists for an attribute.
+	 *
+	 * @param  string  $key
+	 * @return bool
+	 */
+	public function hasGetMutator($key)
+	{
+		return method_exists($this, 'get'.studly_case($key).'Attribute');
+	}
+
+	/**
+	 * Determine if a set mutator exists for an attribute.
+	 *
+	 * @param  string  $key
+	 * @return bool
+	 */
+	public function hasSetMutator($key)
+	{
+		return method_exists($this, 'set'.studly_case($key).'Attribute');
 	}
 
 	/**
@@ -839,6 +876,22 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
+	 * Get the mutated attributes for a given instance.
+	 *
+	 * @return array
+	 */
+	public function getMutatedAttributes()
+	{
+		$class = get_class($this);
+
+		if (isset(static::$mutatorCache[$class])) {
+			return static::$mutatorCache[$class];
+		}
+
+		return array();
+	}
+
+	/**
 	 * Fire the given event for the model.
 	 *
 	 * @param  string  $event
@@ -857,6 +910,39 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		$method = $halt ? 'until' : 'fire';
 
 		return static::$dispatcher->$method($event, $this);
+	}
+
+	/**
+	 * Convert the model instance to JSON.
+	 *
+	 * @param  int  $options
+	 * @return string
+	 */
+	public function toJson($options = 0)
+	{
+		return json_encode($this->toArray(), $options);
+	}
+
+	/**
+	 * Convert the object into something JSON serializable.
+	 *
+	 * @return array
+	 */
+	public function jsonSerialize()
+	{
+		return $this->toArray();
+	}
+
+	/**
+	 * Convert the model instance to an array.
+	 *
+	 * @return array
+	 */
+	public function toArray()
+	{
+		$attributes = $this->attributesToArray();
+
+		return $attributes;
 	}
 
 	/**
@@ -892,7 +978,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		return isset($this->$offset);
 	}
-
 	/**
 	 * Get the value for a given offset.
 	 *
@@ -903,7 +988,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		return $this->$offset;
 	}
-
 	/**
 	 * Set the value for a given offset.
 	 *
@@ -915,7 +999,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$this->$offset = $value;
 	}
-
 	/**
 	 * Unset the value for a given offset.
 	 *
@@ -928,36 +1011,26 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
-	 * Convert the model instance to JSON.
+	 * Determine if an attribute exists on the model.
 	 *
-	 * @param  int  $options
-	 * @return string
+	 * @param  string  $key
+	 * @return bool
 	 */
-	public function toJson($options = 0)
+	public function __isset($key)
 	{
-		return json_encode($this->toArray(), $options);
+		return ((isset($this->attributes[$key]) || isset($this->relations[$key])) ||
+				($this->hasGetMutator($key) && ! is_null($this->getAttributeValue($key))));
 	}
 
 	/**
-	 * Convert the object into something JSON serializable.
+	 * Unset an attribute on the model.
 	 *
-	 * @return array
+	 * @param  string  $key
+	 * @return void
 	 */
-	public function jsonSerialize()
+	public function __unset($key)
 	{
-		return $this->toArray();
-	}
-
-	/**
-	 * Convert the model instance to an array.
-	 *
-	 * @return array
-	 */
-	public function toArray()
-	{
-		$attributes = $this->attributesToArray();
-
-		return $attributes;
+		unset($this->attributes[$key], $this->relations[$key]);
 	}
 
 	/**
