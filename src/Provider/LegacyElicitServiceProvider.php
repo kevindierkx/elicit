@@ -1,30 +1,50 @@
 <?php namespace Kevindierkx\Elicit\Provider;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Foundation\AliasLoader;
 use Kevindierkx\Elicit\ApiManager;
 use Kevindierkx\Elicit\Elicit\Model;
 use Kevindierkx\Elicit\ConnectionFactory;
 
-class ElicitServiceProvider extends ServiceProvider {
+class LegacyElicitServiceProvider extends ServiceProvider {
 
 	/**
-	 * Bootstrap the application events.
-	 *
-	 * @return void
+	 * {@inheritdoc}
 	 */
 	public function boot()
 	{
 		$this->package('kevindierkx/elicit', 'elicit', __DIR__ . '/..');
 
+		$this->prepareCompatibility();
+
 		Model::setConnectionResolver($this->app['elicit']);
 
-		Model::setEventDispatcher($this->app['events']);
+		// We can't alias the type hinted event dispatcher.
+		// The application would break when using it, therefore
+		// we don't set it. The model should work fine without it.
+	 	//
+		// Model::setEventDispatcher($this->app['events']);
+	 	//
 	}
 
 	/**
-	 * Register the service provider.
-	 *
-	 * @return void
+	 * Prepare any compatibility for earlier or later versions of Laravel.
+	 */
+	protected function prepareCompatibility()
+	{
+		$loader = AliasLoader::getInstance();
+
+		if (interface_exists('Illuminate\Support\Contracts\ArrayableInterface')) {
+            $loader->alias('Illuminate\Contracts\Support\Arrayable', 'Illuminate\Support\Contracts\ArrayableInterface');
+        }
+
+        if (interface_exists('Illuminate\Support\Contracts\JsonableInterface')) {
+            $loader->alias('Illuminate\Contracts\Support\Jsonable', 'Illuminate\Support\Contracts\JsonableInterface');
+        }
+	}
+
+	/**
+	 * {@inheritdoc}
 	 */
 	public function register()
 	{
