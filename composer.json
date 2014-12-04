@@ -9,14 +9,14 @@
     "authors": [
         {
             "name": "Kevin Dierkx",
-            "email": "kevin@pcextreme.nl"
+            "email": "contact@kevindierkx.com"
         }
     ],
     "require": {
         "php": ">=5.4.0",
-        "illuminate/container": "~5.0",
-        "illuminate/contracts": "~5.0",
-        "illuminate/support": "~5.0",
+        "illuminate/container": "~4.2|~5.0",
+        "illuminate/contracts": "dev-master",
+        "illuminate/support": "~4.2|~5.0",
         "guzzlehttp/guzzle": "~4.2"
     },
     "autoload": {
@@ -24,5 +24,5 @@
             "Kevindierkx\\Elicit\\": "src/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "dev"
 }
