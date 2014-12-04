@@ -1,6 +1,7 @@
 <?php namespace Kevindierkx\Elicit;
 
 use Illuminate\Support\Str;
+use Illuminate\Contracts\Events\Dispatcher;
 use Kevindierkx\Elicit\Connection\Connection;
 use Kevindierkx\Elicit\ConnectionFactory;
 
@@ -49,7 +50,7 @@ class ApiManager implements ConnectionResolverInterface {
 	}
 
 	/**
-	 * Get a database connection instance.
+	 * Get an API connection instance.
 	 *
 	 * @param  string  $name
 	 * @return \Illuminate\Database\Connection
@@ -58,13 +59,8 @@ class ApiManager implements ConnectionResolverInterface {
 	{
 		list($name, $type) = $this->parseConnectionName($name);
 
-		// If we haven't created this connection, we'll create it based on the config
-		// provided in the application. Once we've created the connections we will
-		// set the "fetch mode" for PDO which determines the query return types.
 		if (! isset($this->connections[$name])) {
 			$connection = $this->makeConnection($name);
-
-			// $this->setPdoForType($connection, $type);
 
 			$this->connections[$name] = $this->prepare($connection);
 		}
@@ -85,65 +81,6 @@ class ApiManager implements ConnectionResolverInterface {
 		return Str::endsWith($name, ['::read', '::write'])
                             ? explode('::', $name, 2) : [$name, null];
 	}
-
-	/**
-	 * Disconnect from the given database and remove from local cache.
-	 *
-	 * @param  string  $name
-	 * @return void
-	 */
-	// public function purge($name = null)
-	// {
-	// 	$this->disconnect($name);
-
-	// 	unset($this->connections[$name]);
-	// }
-
-	/**
-	 * Disconnect from the given database.
-	 *
-	 * @param  string  $name
-	 * @return void
-	 */
-	// public function disconnect($name = null)
-	// {
-	// 	if (isset($this->connections[$name = $name ?: $this->getDefaultConnection()]))
-	// 	{
-	// 		$this->connections[$name]->disconnect();
-	// 	}
-	// }
-
-	/**
-	 * Reconnect to the given database.
-	 *
-	 * @param  string  $name
-	 * @return \Illuminate\Database\Connection
-	 */
-	// public function reconnect($name = null)
-	// {
-	// 	$this->disconnect($name = $name ?: $this->getDefaultConnection());
-
-	// 	if (! isset($this->connections[$name])) {
-	// 		return $this->connection($name);
-	// 	}
-
-	// 	return $this->refreshPdoConnections($name);
-	// }
-
-	/**
-	 * Refresh the PDO connections on a given connection.
-	 *
-	 * @param  string  $name
-	 * @return \Illuminate\Database\Connection
-	 */
-	// protected function refreshPdoConnections($name)
-	// {
-	// 	$fresh = $this->makeConnection($name);
-
-	// 	return $this->connections[$name]
- //                                ->setPdo($fresh->getPdo())
- //                                ->setReadPdo($fresh->getReadPdo());
-	// }
 
 	/**
 	 * Make the API connection instance.
@@ -175,23 +112,27 @@ class ApiManager implements ConnectionResolverInterface {
 	}
 
 	/**
-	 * Prepare the database connection instance.
+	 * Prepare the API connection instance.
 	 *
 	 * @param  \Kevindierkx\Elicit\Connection\Connection  $connection
 	 * @return \Kevindierkx\Elicit\Connection\Connection
 	 */
 	protected function prepare(Connection $connection)
 	{
-		// $connection->setFetchMode($this->app['config']['api.fetch']);
-
-		if ($this->app->bound('events')) {
+		// Here we make sure a compatible events dispatcher is available.
+		// When the evens dispatcher is not of the required instance we wont
+		// set is. This will disable events but should not impact the application.
+		if (
+			$this->app->bound('events') &&
+			$this->app->make('events') instanceof Dispatcher
+		) {
 			$connection->setEventDispatcher($this->app['events']);
 		}
 
-		// The database connection can also utilize a cache manager instance when cache
+		// The API connection can also utilize a cache manager instance when cache
 		// functionality is used on queries, which provides an expressive interface
 		// to caching both fluent queries and Eloquent queries that are executed.
-		$app = $this->app;
+		// $app = $this->app;
 
 		// $connection->setCacheManager(function() use ($app) {
 		// 	return $app['cache'];
@@ -215,24 +156,6 @@ class ApiManager implements ConnectionResolverInterface {
 	}
 
 	/**
-	 * Prepare the read write mode for database connection instance.
-	 *
-	 * @param  \Illuminate\Database\Connection  $connection
-	 * @param  string  $type
-	 * @return \Illuminate\Database\Connection
-	 */
-	// protected function setPdoForType(Connection $connection, $type = null)
-	// {
-	// 	if ($type == 'read') {
-	// 		$connection->setPdo($connection->getReadPdo());
-	// 	} elseif ($type == 'write') {
-	// 		$connection->setReadPdo($connection->getPdo());
-	// 	}
-
-	// 	return $connection;
-	// }
-
-	/**
 	 * Get the configuration for a connection.
 	 *
 	 * @param  string  $name
@@ -244,10 +167,10 @@ class ApiManager implements ConnectionResolverInterface {
 	{
 		$name = $name ?: $this->getDefaultConnection();
 
-		// To get the database connection configuration, we will just pull each of the
+		// To get the API connection configuration, we will just pull each of the
 		// connection configurations and get the configurations for the given name.
 		// If the configuration doesn't exist, we'll throw an exception and bail.
-		$connections = $this->app['config']['api.connections'];
+		$connections = $this->app['config']['elicit::connections'];
 
 		if (is_null($config = array_get($connections, $name))) {
 			throw new \InvalidArgumentException("API connection [$name] not configured.");
@@ -263,7 +186,7 @@ class ApiManager implements ConnectionResolverInterface {
 	 */
 	public function getDefaultConnection()
 	{
-		return $this->app['config']['api.default'];
+		return $this->app['config']['elicit::default'];
 	}
 
 	/**
@@ -274,7 +197,17 @@ class ApiManager implements ConnectionResolverInterface {
 	 */
 	public function setDefaultConnection($name)
 	{
-		$this->app['config']['api.default'] = $name;
+		$this->app['config']['elicit::default'] = $name;
+	}
+
+	/**
+	 * Return all of the created connections.
+	 *
+	 * @return array
+	 */
+	public function getConnections()
+	{
+		return $this->connections;
 	}
 
 	/**
@@ -290,16 +223,6 @@ class ApiManager implements ConnectionResolverInterface {
 	}
 
 	/**
-	 * Return all of the created connections.
-	 *
-	 * @return array
-	 */
-	public function getConnections()
-	{
-		return $this->connections;
-	}
-
-	/**
 	 * Dynamically pass methods to the default connection.
 	 *
 	 * @param  string  $method
@@ -308,7 +231,7 @@ class ApiManager implements ConnectionResolverInterface {
 	 */
 	public function __call($method, $parameters)
 	{
-		return call_user_func_array(array($this->connection(), $method), $parameters);
+		return call_user_func_array([$this->connection(), $method], $parameters);
 	}
 
 }
