@@ -135,9 +135,9 @@ class Connector {
 	 */
 	protected function parseResponse(Response $response)
 	{
-		$contentType = $response->getHeader('content-type');
+		$contentType = explode(';', $response->getHeader('content-type'));
 
-		switch ($contentType) {
+		switch ($contentType[0]) {
 			case 'application/json':
 				return $response->json();
 
