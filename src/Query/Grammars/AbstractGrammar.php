@@ -74,15 +74,15 @@ abstract class AbstractGrammar {
 	/**
 	 * Validate the existence of a replaced where.
 	 *
-	 * @param  array   $path
+	 * @param  array   $where
 	 * @return boolean
 	 */
-	public function hasReplacedWhere(array $path)
+	public function hasReplacedWhere(array $where)
 	{
 		foreach ($this->replacedWheres as $replacedWhere) {
 			if (
-				$where['column'] === $path['column'] &&
-				$where['value']  === $path['value']
+				$replacedWhere['column'] === $where['column'] &&
+				$replacedWhere['value']  === $where['value']
 			) {
 				return true;
 			}
