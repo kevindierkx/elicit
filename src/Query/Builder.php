@@ -29,6 +29,13 @@ class Builder {
 	public $wheres;
 
 	/**
+	 * The post body for the request.
+	 *
+	 * @var array
+	 */
+	public $body;
+
+	/**
 	 * The maximum number of records to return.
 	 *
 	 * @var int
@@ -146,7 +153,6 @@ class Builder {
 			});
 		}
 
-		// For simple wheres we just add them to the array.
 		$this->wheres[] = compact('column', 'value');
 
 		return $this;
@@ -228,6 +234,65 @@ class Builder {
 		// Once we have parsed out the columns we are ready to add it to this
 		// query as a where clause just like any other clause on the query.
 		$this->where(snake_case($segment), $parameters[$index]);
+	}
+
+	/**
+	 * Add a post field to the query.
+	 *
+	 * @param  string  $column
+	 * @param  mixed   $value
+	 * @return $this
+	 */
+	public function postField($column, $value = null)
+	{
+		// If the column is an array, we will assume it is an array of key-value pairs
+		// and can add them each as a post field.
+		if ( is_array($column) ) {
+			return $this->postFieldNested(function($query) use ($column) {
+				foreach ($column as $key => $value) {
+					$query->postField($key, $value);
+				}
+			});
+		}
+
+		$this->body[] = compact('column', 'value');
+
+		return $this;
+	}
+
+	/**
+	 * Add a nested post field to the query.
+	 *
+	 * @param  \Closure $callback
+	 * @return \Kevindierkx\Elicit\Query\Builder|static
+	 */
+	public function postFieldNested(Closure $callback)
+	{
+		// To handle nested post fields we'll actually create a brand new query instance
+		// and pass it off to the Closure that we have. The Closure can simply do
+		// do whatever it wants to a post field then we will store it for compiling.
+		$query = $this->newQuery();
+
+		call_user_func($callback, $query);
+
+		return $this->addNestedPostFieldQuery($query);
+	}
+
+	/**
+	 * Merge another query builder body with the query builder body.
+	 *
+	 * @param  \Kevindierkx\Elicit\Query\Builder|static $query
+	 * @return $this
+	 */
+	public function addNestedPostFieldQuery($query)
+	{
+		if ( count($query->body) ) {
+			$body = $this->body ?: [];
+
+			$this->body = array_merge($body, $query->body);
+		}
+
+		return $this;
 	}
 
 	/**

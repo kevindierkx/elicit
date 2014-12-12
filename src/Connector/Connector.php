@@ -107,7 +107,16 @@ class Connector {
 	 */
 	protected function prepareRequestUrl(array $query)
 	{
-		return $this->host . array_get($query, 'from.path') . '?' . array_get($query, 'wheres');
+		$wheres = array_get($query, 'wheres');
+
+		$baseUrl = $this->host . array_get($query, 'from.path');
+
+		// Here we validate that there are any wheres in the
+		// request. When none are provided we will return the
+		// Request Url without the question mark.
+		if ( empty($wheres) ) return $baseUrl;
+
+		return $baseUrl . '?' . array_get($query, 'wheres');
 	}
 
 	/**
