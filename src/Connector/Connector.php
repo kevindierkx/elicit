@@ -43,7 +43,7 @@ class Connector {
 	{
 		$hasHost = isset($config['host']);
 
-		if (! $hasHost) {
+		if ( ! $hasHost ) {
 			throw new \InvalidArgumentException("No host provided for connection [" . $config['name'] . "]");
 		}
 

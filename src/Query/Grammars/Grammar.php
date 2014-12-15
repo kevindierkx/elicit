@@ -65,7 +65,12 @@ class Grammar extends AbstractGrammar {
 		$hasNamedParameters = $this->hasNamedParameters($path);
 
 		if ( $hasNamedParameters ) {
-			$path = $this->replaceNamedParameters($path, $query->wheres);
+			// When there are no wheres provided we will provide an empty array
+			// to the replace method. The replace method is able to provide a more
+			// specific error message when a named parameter is missing.
+			$wheres = $query->wheres ?: [];
+
+			$path = $this->replaceNamedParameters($path, $wheres);
 		}
 
 		return compact('method', 'path');
@@ -85,7 +90,7 @@ class Grammar extends AbstractGrammar {
 
 		if ($hasWheres) {
 			foreach ($query->wheres as $where) {
-				if ( $this->hasReplacedWhere($where) ) continue;
+				if ( $this->hasReplacedParameter($where) ) continue;
 
 				$wheres[$where['column']] = $where['value'];
 			}

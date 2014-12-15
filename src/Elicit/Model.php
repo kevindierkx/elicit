@@ -301,6 +301,24 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
+	 * Save a new model and return the instance.
+	 *
+	 * @param  array  $attributes
+	 * @return static
+	 */
+	public static function create(array $attributes)
+	{
+		$instance = new static;
+
+		$path = $instance->getPath('store');
+
+		return $instance->newQuery()
+			->postField($attributes)
+			->from($path)
+			->get();
+	}
+
+	/**
 	 * Begin querying the model.
 	 *
 	 * @return \Kevindierkx\Elicit\elicit\Builder
