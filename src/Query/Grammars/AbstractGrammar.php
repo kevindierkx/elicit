@@ -7,7 +7,7 @@ abstract class AbstractGrammar {
 	 *
 	 * @var array
 	 */
-	protected $replacedParameter = array();
+	protected $replacedParameters = array();
 
 	/**
 	 * Check for named parameters in the path.
