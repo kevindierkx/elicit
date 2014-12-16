@@ -15,20 +15,6 @@ class Builder {
 	protected $connection;
 
 	/**
-	 * The API query grammar instance.
-	 *
-	 * @var \Kevindierkx\Elicit\Query\Grammars\Grammar
-	 */
-	protected $grammar;
-
-	/**
-	 * The database query post processor instance.
-	 *
-	 * @var \Kevindierkx\Elicit\Query\Processors\Processor
-	 */
-	protected $processor;
-
-	/**
 	 * The path which the query is targeting.
 	 *
 	 * @var array
@@ -43,11 +29,32 @@ class Builder {
 	public $wheres;
 
 	/**
+	 * The post body for the request.
+	 *
+	 * @var array
+	 */
+	public $body;
+
+	/**
 	 * The maximum number of records to return.
 	 *
 	 * @var int
 	 */
 	public $limit;
+
+	/**
+	 * The API query grammar instance.
+	 *
+	 * @var \Kevindierkx\Elicit\Query\Grammars\Grammar
+	 */
+	protected $grammar;
+
+	/**
+	 * The database query post processor instance.
+	 *
+	 * @var \Kevindierkx\Elicit\Query\Processors\Processor
+	 */
+	protected $processor;
 
 	/**
 	 * Create a new reuqets builder instance.
@@ -138,7 +145,7 @@ class Builder {
 	{
 		// If the column is an array, we will assume it is an array of key-value pairs
 		// and can add them each as a where clause.
-		if (is_array($column)) {
+		if ( is_array($column) ) {
 			return $this->whereNested(function($query) use ($column) {
 				foreach ($column as $key => $value) {
 					$query->where($key, $value);
@@ -146,7 +153,6 @@ class Builder {
 			});
 		}
 
-		// For simple wheres we just add them to the array.
 		$this->wheres[] = compact('column', 'value');
 
 		return $this;
@@ -165,10 +171,6 @@ class Builder {
 		// do whatever it wants to a query then we will store it for compiling.
 		$query = $this->newQuery();
 
-		// The nested query does not have the from field set. At this point we don't
-		// have the required information about the from field to set it. This is
-		// however not a problem since all requests go to the same endpoint.
-
 		call_user_func($callback, $query);
 
 		return $this->addNestedWhereQuery($query);
@@ -182,10 +184,112 @@ class Builder {
 	 */
 	public function addNestedWhereQuery($query)
 	{
-		if (count($query->wheres)) {
-			$wheres = $this->wheres ?: array();
+		if ( count($query->wheres) ) {
+			$wheres = $this->wheres ?: [];
 
 			$this->wheres = array_merge($wheres, $query->wheres);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Handles dynamic "where" clauses to the query.
+	 *
+	 * @param  string  $method
+	 * @param  string  $parameters
+	 * @return $this
+	 */
+	public function dynamicWhere($method, $parameters)
+	{
+		$finder   = substr($method, 5);
+		$segments = preg_split('/(And)(?=[A-Z])/', $finder, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+		$index = 0;
+
+		foreach ($segments as $segment) {
+			// If the segment is not a boolean connector, we can assume it is a column's name
+			// and we will add it to the query as a new constraint as a where clause, then
+			// we can keep iterating through the dynamic method string's segments again.
+			if ( $segment != 'And' ) {
+				$this->addDynamic($segment, $parameters, $index);
+
+				$index++;
+			}
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Add a single dynamic where clause statement to the query.
+	 *
+	 * @param  string  $segment
+	 * @param  array   $parameters
+	 * @param  int     $index
+	 * @return void
+	 */
+	protected function addDynamic($segment, $parameters, $index)
+	{
+		// Once we have parsed out the columns we are ready to add it to this
+		// query as a where clause just like any other clause on the query.
+		$this->where(snake_case($segment), $parameters[$index]);
+	}
+
+	/**
+	 * Add a post field to the query.
+	 *
+	 * @param  string  $column
+	 * @param  mixed   $value
+	 * @return $this
+	 */
+	public function postField($column, $value = null)
+	{
+		// If the column is an array, we will assume it is an array of key-value pairs
+		// and can add them each as a post field.
+		if ( is_array($column) ) {
+			return $this->postFieldNested(function($query) use ($column) {
+				foreach ($column as $key => $value) {
+					$query->postField($key, $value);
+				}
+			});
+		}
+
+		$this->body[] = compact('column', 'value');
+
+		return $this;
+	}
+
+	/**
+	 * Add a nested post field to the query.
+	 *
+	 * @param  \Closure $callback
+	 * @return \Kevindierkx\Elicit\Query\Builder|static
+	 */
+	public function postFieldNested(Closure $callback)
+	{
+		// To handle nested post fields we'll actually create a brand new query instance
+		// and pass it off to the Closure that we have. The Closure can simply do
+		// do whatever it wants to a post field then we will store it for compiling.
+		$query = $this->newQuery();
+
+		call_user_func($callback, $query);
+
+		return $this->addNestedPostFieldQuery($query);
+	}
+
+	/**
+	 * Merge another query builder body with the query builder body.
+	 *
+	 * @param  \Kevindierkx\Elicit\Query\Builder|static $query
+	 * @return $this
+	 */
+	public function addNestedPostFieldQuery($query)
+	{
+		if ( count($query->body) ) {
+			$body = $this->body ?: [];
+
+			$this->body = array_merge($body, $query->body);
 		}
 
 		return $this;
@@ -199,7 +303,7 @@ class Builder {
 	 */
 	public function limit($value)
 	{
-		if ($value > 0) $this->limit = $value;
+		if ( $value > 0 ) $this->limit = $value;
 
 		return $this;
 	}
@@ -276,7 +380,7 @@ class Builder {
 	 */
 	public function __call($method, $parameters)
 	{
-		if (starts_with($method, 'where')) {
+		if ( starts_with($method, 'where') ) {
 			return $this->dynamicWhere($method, $parameters);
 		}
 

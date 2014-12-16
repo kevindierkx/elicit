@@ -1,7 +1,9 @@
 <?php namespace Kevindierkx\Elicit\Connector;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Message\Request;
 use GuzzleHttp\Message\Response;
+use GuzzleHttp\Stream\Stream;
 
 class Connector {
 
@@ -43,7 +45,7 @@ class Connector {
 	{
 		$hasHost = isset($config['host']);
 
-		if (! $hasHost) {
+		if ( ! $hasHost ) {
 			throw new \InvalidArgumentException("No host provided for connection [" . $config['name'] . "]");
 		}
 
@@ -71,19 +73,15 @@ class Connector {
 	{
 		$client = new Client;
 
-		$request = $client->createRequest(
+		$this->client  = $client;
+		$this->request = $client->createRequest(
 			$this->prepareMethod($query),
-			$this->prepareRequestUrl($query)
+			$this->prepareRequestUrl($query),
+			[
+				'headers' => $this->prepareHeaders($query),
+				'body'    => $this->prepareBody($query),
+			]
 		);
-
-		$hasHeaders = ! is_null($this->headers);
-
-		if ($hasHeaders) {
-			$request->addHeaders($this->headers);
-		}
-
-		$this->client = $client;
-		$this->request = $request;
 
 		return $this;
 	}
@@ -107,7 +105,53 @@ class Connector {
 	 */
 	protected function prepareRequestUrl(array $query)
 	{
-		return $this->host . array_get($query, 'from.path') . '?' . array_get($query, 'wheres');
+		$wheres = array_get($query, 'wheres');
+
+		$baseUrl = $this->host . array_get($query, 'from.path');
+
+		$hasWheres = ! empty($wheres);
+
+		// Here we validate that there are any wheres in the
+		// request. When none are provided we will return the
+		// Request Url without the question mark.
+		if ( $hasWheres ) return $baseUrl . '?' . array_get($query, 'wheres');
+
+		return $baseUrl;
+	}
+
+	/**
+	 * Prepare headers from query.
+	 *
+	 * @param  array  $query
+	 * @return array
+	 */
+	protected function prepareHeaders(array $query)
+	{
+		$hasHeaders = ! is_null($this->headers);
+
+		if ( $hasHeaders ) return $this->headers;
+
+		// Headers should always be added as an array. When the user
+		// has not defined any headers in either the connection config or
+		// during runtime we will return an empty array as placeholder.
+		return [];
+	}
+
+	/**
+	 * Prepare body from query.
+	 *
+	 * @param  array  $query
+	 * @return string|array|null
+	 */
+	protected function prepareBody(array $query)
+	{
+		$isPostMethod = array_get($query, 'from.method') == 'POST';
+
+		if ( $isPostMethod ) {
+			// The query grammar already parsed the body for us.
+			// We return the value of the query and guzzle does the rest.
+			return array_get($query, 'body');
+		}
 	}
 
 	/**

@@ -31,7 +31,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 *
 	 * @var array
 	 */
-	protected $paths = array();
+	protected $paths = [];
 
 	/**
 	 * Default configurations for paths.
@@ -74,20 +74,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 * @var array
 	 */
 	protected $original = array();
-
-	/**
-	 * The loaded relationships for the model.
-	 *
-	 * @var array
-	 */
-	protected $relations = array();
-
-	/**
-	 * The relations to eager load on every query.
-	 *
-	 * @var array
-	 */
-	protected $with = array();
 
 	/**
 	 * Indicates if the model exists.
@@ -155,7 +141,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$class = get_class($this);
 
-		if (! isset(static::$booted[$class])) {
+		if ( ! isset(static::$booted[$class]) ) {
 			static::$booted[$class] = true;
 
 			$this->fireModelEvent('booting', false);
@@ -181,8 +167,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		// spin through them after we export models to their array form, which we
 		// need to be fast. This will let us always know the attributes mutate.
 		foreach (get_class_methods($class) as $method) {
-			if (preg_match('/^get(.+)Attribute$/', $method, $matches)) {
-				if (static::$snakeAttributes) {
+			if ( preg_match('/^get(.+)Attribute$/', $method, $matches) ) {
+				if ( static::$snakeAttributes ) {
 					$matches[1] = snake_case($matches[1]);
 				}
 
@@ -201,7 +187,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	protected static function bootTraits()
 	{
 		foreach (class_uses_recursive(get_called_class()) as $trait) {
-			if (method_exists(get_called_class(), $method = 'boot'.class_basename($trait))) {
+			if ( method_exists(get_called_class(), $method = 'boot'.class_basename($trait)) ) {
 				forward_static_call([get_called_class(), $method]);
 			}
 		}
@@ -220,33 +206,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		}
 
 		return $this;
-	}
-
-	/**
-	 * Being querying a model with eager loading.
-	 *
-	 * @param  array|string  $relations
-	 * @return \Kevindierkx\Elicit\Elicit\Builder|static
-	 */
-	public static function with($relations)
-	{
-		if (is_string($relations)) {
-			$relations = func_get_args();
-		}
-
-		$instance = new static;
-
-		return $instance->newQuery()->with($relations);
-	}
-
-	/**
-	 * Begin querying the model.
-	 *
-	 * @return \Kevindierkx\Elicit\elicit\Builder
-	 */
-	public static function query()
-	{
-		return (new static)->newQuery();
 	}
 
 	/**
@@ -342,6 +301,34 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	}
 
 	/**
+	 * Save a new model and return the instance.
+	 *
+	 * @param  array  $attributes
+	 * @return static
+	 */
+	public static function create(array $attributes)
+	{
+		$instance = new static;
+
+		$path = $instance->getPath('store');
+
+		return $instance->newQuery()
+			->postField($attributes)
+			->from($path)
+			->get();
+	}
+
+	/**
+	 * Begin querying the model.
+	 *
+	 * @return \Kevindierkx\Elicit\elicit\Builder
+	 */
+	public static function query()
+	{
+		return (new static)->newQuery();
+	}
+
+	/**
 	 * Get a new query builder for the model's API.
 	 *
 	 * @return \Kevindierkx\Elicit\Elicit\Builder
@@ -355,7 +342,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		// Once we have the query builders, we will set the model instances so the
 		// builder can easily access any information it may need from the model
 		// while it is constructing and executing various queries against it.
-		$builder->setModel($this)->with($this->with);
+		$builder->setModel($this);
 
 		return $builder;
 	}
@@ -449,7 +436,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$paths = $this->getMergedPaths();
 
-		if (array_key_exists($key, $paths)) {
+		if ( array_key_exists($key, $paths) ) {
 			return $paths[$key];
 		}
 	}
@@ -465,7 +452,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$this->paths[$path] = ['path' => $value];
 
-		if (! is_null($method)) {
+		if ( ! is_null($method) ) {
 			$this->paths[$path]['method'] = $method;
 		}
 	}
@@ -480,7 +467,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$hasPath = isset($paths[$key]['method']);
 
-		if ($hasPath) {
+		if ( $hasPath ) {
 			return $this->paths[$key]['path'];
 		}
 	}
@@ -495,10 +482,10 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$paths = $this->getMergedPaths();
 
-		$hasPath = array_key_exists($key, $paths);
+		$hasPath   = array_key_exists($key, $paths);
 		$hasMethod = isset($paths[$key]['method']);
 
-		if ($hasPath && $hasMethod) {
+		if ( $hasPath && $hasMethod ) {
 			return $paths[$key]['method'];
 		}
 	}
@@ -678,7 +665,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$this->attributes = $attributes;
 
-		if ($sync) $this->syncOriginal();
+		if ( $sync ) $this->syncOriginal();
 	}
 
 	/**
@@ -741,7 +728,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		// If the key references an attribute, we can just go ahead and return the
 		// plain attribute value from the model. This allows every attribute to
 		// be dynamically accessed through the _get method without accessors.
-		if ($inAttributes || $this->hasGetMutator($key)) {
+		if ( $inAttributes || $this->hasGetMutator($key) ) {
 			return $this->getAttributeValue($key);
 		}
 
@@ -749,24 +736,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 
 		// If the key references an path attribute, we can just go ahead and return the
 		// plain attribute value from the model.
-		if ($inPaths) {
+		if ( $inPaths ) {
 			return $this->getPathValue($key);
-		}
-
-		// If the key already exists in the relationships array, it just means the
-		// relationship has already been loaded, so we'll just return it out of
-		// here because there is no need to query within the relations twice.
-		if (array_key_exists($key, $this->relations)) {
-			return $this->relations[$key];
-		}
-
-		// If the "attribute" exists as a method on the model, we will just assume
-		// it is a relationship and will load and return results from the query
-		// and hydrate the relationship's value on the "relationships" array.
-		$camelKey = camel_case($key);
-
-		if (method_exists($this, $camelKey)) {
-			return $this->getRelationshipFromMethod($key, $camelKey);
 		}
 	}
 
@@ -782,7 +753,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		// We will check for the presence of a mutator for the set operation
 		// which simply lets the developers tweak the attribute as it is set on
 		// the model, such as "json_encoding" an listing of data for storage.
-		if ($this->hasSetMutator($key)) {
+		if ( $this->hasSetMutator($key) ) {
 			$method = 'set'.studly_case($key).'Attribute';
 			return $this->{$method}($value);
 		}
@@ -820,9 +791,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	protected function getAttributeValue($key)
 	{
-		$value = $this->getAttributeFromArray($key);
-
-		return $value;
+		return $this->getAttributeFromArray($key);
 	}
 
 	/**
@@ -833,7 +802,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	protected function getAttributeFromArray($key)
 	{
-		if (array_key_exists($key, $this->attributes)) {
+		if ( array_key_exists($key, $this->attributes) ) {
 			return $this->attributes[$key];
 		}
 	}
@@ -856,7 +825,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	protected function getArrayableItems(array $values)
 	{
-		if (count($this->visible) > 0) {
+		if ( count($this->visible) > 0 ) {
 			return array_intersect_key($values, array_flip($this->visible));
 		}
 
@@ -870,9 +839,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	public function attributesToArray()
 	{
-		$attributes = $this->getArrayableAttributes();
-
-		return $attributes;
+		return $this->getArrayableAttributes();
 	}
 
 	/**
@@ -900,7 +867,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	protected function fireModelEvent($event, $halt = true)
 	{
-		if (! isset(static::$dispatcher)) return true;
+		if ( ! isset(static::$dispatcher) ) return true;
 
 		// We will append the names of the class to the event to distinguish it from
 		// other model events that are fired, allowing us to listen on each model
@@ -940,9 +907,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	public function toArray()
 	{
-		$attributes = $this->attributesToArray();
-
-		return $attributes;
+		return $this->attributesToArray();
 	}
 
 	/**

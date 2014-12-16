@@ -19,18 +19,11 @@ class Builder {
 	protected $model;
 
 	/**
-	 * The relationships that should be eager loaded.
-	 *
-	 * @var array
-	 */
-	protected $eagerLoad = [];
-
-	/**
 	 * The methods that should be returned from query builder.
 	 *
 	 * @var array
 	 */
-	protected $passthru = ['exists'];
+	protected $passthru = ['toRequest'];
 
 	/**
 	 * Create a new Eloquent query builder instance.
@@ -51,34 +44,10 @@ class Builder {
 	 */
 	public function find($id)
 	{
-		if (is_array($id)) {
-			return $this->findMany($id);
-		}
-
 		$this->query->where($this->model->getKeyName(), $id);
 
 		return $this->first();
 	}
-
-	/**
-	 * Find a model by its primary key.
-	 *
-	 * @param  array  $id
-	 * @param  array  $columns
-	 * @return \Kevindierkx\Elicit\Elicit\Model|Collection|static
-	 */
-	// public function findMany($id)
-	// {
-	// 	throw new \RuntimeException("findMany in Elicit\Builder needs some work.");
-
-	// 	if (empty($id)) {
-	// 		return $this->model->newCollection();
-	// 	}
-
-	// 	$this->query->whereIn($this->model->getQualifiedKeyName(), $id);
-
-	// 	return $this->get($columns);
-	// }
 
 	/**
 	 * Find a model by its primary key or throw an exception.
@@ -91,7 +60,7 @@ class Builder {
 	 */
 	public function findOrFail($id)
 	{
-		if (! is_null($model = $this->find($id))) return $model;
+		if ( ! is_null($model = $this->find($id)) ) return $model;
 
 		throw (new ModelNotFoundException)->setModel(get_class($this->model));
 	}
@@ -119,15 +88,15 @@ class Builder {
 	 */
 	public function firstOrFail()
 	{
-		if (! is_null($model = $this->first())) return $model;
+		if ( ! is_null($model = $this->first()) ) return $model;
 
 		throw (new ModelNotFoundException)->setModel(get_class($this->model));
 	}
 
 	/**
-	 * Execute the query as a "index|show" statement.
+	 * Execute the query statement.
 	 *
-	 * @return \Kevindierkx\Elicit\Elicit\Collection|static[]
+	 * @return \Kevindierkx\Elicit\Elicit\Collection|static
 	 */
 	public function get()
 	{
@@ -136,7 +105,7 @@ class Builder {
 		// When no from has been specified at this point the developer
 		// tries to do a basic where query. In this case we want to use the index
 		// path, since the index path is supposed to return collections.
-		if (! $hasFrom) {
+		if ( ! $hasFrom ) {
 			$path = $this->model->getPath('index');
 
 			$this->query->from($path);
@@ -144,35 +113,14 @@ class Builder {
 
 		$models = $this->getModels();
 
-		// ... Eager load relations
-
 		return $this->model->newCollection($models);
-	}
-
-	/**
-	 * Set the relationships that should be eager loaded.
-	 *
-	 * @param  mixed  $relations
-	 * @return $this
-	 */
-	public function with($relations)
-	{
-		if (is_string($relations)) {
-			$relations = func_get_args();
-		}
-
-		$eagers = $this->parseRelations($relations);
-
-		$this->eagerLoad = array_merge($this->eagerLoad, $eagers);
-
-		return $this;
 	}
 
 	/**
 	 * Get the hydrated models without eager loading.
 	 *
 	 * @param  array  $columns
-	 * @return \Kevindierkx\Elicit\Elicit\Model[]
+	 * @return \Kevindierkx\Elicit\Elicit\Model
 	 */
 	public function getModels()
 	{
@@ -183,7 +131,7 @@ class Builder {
 
 		$connection = $this->model->getConnectionName();
 
-		$models = array();
+		$models = [];
 
 		// Once we have the results, we can spin through them and instantiate a fresh
 		// model instance for each records we retrieved from the database. We will
@@ -195,37 +143,6 @@ class Builder {
 		}
 
 		return $models;
-	}
-
-	/**
-	 * Parse a list of relations into individuals.
-	 *
-	 * @param  array  $relations
-	 * @return array
-	 */
-	protected function parseRelations(array $relations)
-	{
-		$results = array();
-
-		foreach ($relations as $name => $constraints) {
-			// If the "relation" value is actually a numeric key, we can assume that no
-			// constraints have been specified for the eager load and we'll just put
-			// an empty Closure with the loader so that we can treat all the same.
-			if (is_numeric($name)) {
-				$f = function() {};
-
-				list($name, $constraints) = array($constraints, $f);
-			}
-
-			// We need to separate out any nested includes. Which allows the developers
-			// to load deep relationships using "dots" without stating each level of
-			// the relationship with its own key in the array of eager load names.
-			$results = $this->parseNested($name, $results);
-
-			$results[$name] = $constraints;
-		}
-
-		return $results;
 	}
 
 	/**
@@ -269,8 +186,6 @@ class Builder {
 	{
 		$this->model = $model;
 
-		// $this->query->from($model->getTable());
-
 		return $this;
 	}
 
@@ -283,7 +198,7 @@ class Builder {
 	 */
 	public function __call($method, $parameters)
 	{
-		if (method_exists($this->model, $scope = 'scope'.ucfirst($method))) {
+		if ( method_exists($this->model, $scope = 'scope'.ucfirst($method)) ) {
 			return $this->callScope($scope, $parameters);
 		}
 

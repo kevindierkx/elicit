@@ -12,6 +12,7 @@ class Grammar extends AbstractGrammar {
 	protected $requestComponents = array(
 		'from',
 		'wheres',
+		'body',
 	);
 
 	/**
@@ -33,7 +34,7 @@ class Grammar extends AbstractGrammar {
 	 */
 	protected function compileComponents(Builder $query)
 	{
-		$request = array();
+		$request = [];
 
 		foreach ($this->requestComponents as $component) {
 			// To compile the query, we'll spin through each component of the query and
@@ -63,8 +64,13 @@ class Grammar extends AbstractGrammar {
 
 		$hasNamedParameters = $this->hasNamedParameters($path);
 
-		if ($hasNamedParameters) {
-			$path = $this->replaceNamedParameters($path, $query->wheres);
+		if ( $hasNamedParameters ) {
+			// When there are no wheres provided we will provide an empty array
+			// to the replace method. The replace method is able to provide a more
+			// specific error message when a named parameter is missing.
+			$wheres = $query->wheres ?: [];
+
+			$path = $this->replaceNamedParameters($path, $wheres);
 		}
 
 		return compact('method', 'path');
@@ -78,35 +84,58 @@ class Grammar extends AbstractGrammar {
 	 */
 	protected function compileWheres(Builder $query)
 	{
-		$request = array();
+		$wheres = [];
 
 		$hasWheres = ! is_null($query->wheres);
 
 		if ($hasWheres) {
 			foreach ($query->wheres as $where) {
-				if ($this->hasReplacedWhere($where)) continue;
+				if ( $this->hasReplacedParameter($where) ) continue;
 
-				$request[$where['column']] = $where['value'];
+				$wheres[$where['column']] = $where['value'];
 			}
 
 			// Here we create the query string. Some APIs (Graphite) support multiple
 			// parameters with the same key. When we find an entry with multiple values
 			// well add it multiple times to the query.
-			if (count($request) > 0) {
-				$requestString = null;
+			if ( count($wheres) > 0 ) {
+				$queryString = null;
 
-				foreach ($request as $key => $value) {
-					if (is_array($value)) {
+				foreach ($wheres as $key => $value) {
+					if ( is_array($value) ) {
 						foreach ($value as $attribute) {
-							$requestString .= $this->buildQuery($key, $attribute);
+							$queryString .= $this->buildQuery($key, $attribute);
 						}
 					} else {
-						$requestString .= $this->buildQuery($key, $value);
+						$queryString .= $this->buildQuery($key, $value);
 					}
 				}
 
-				return substr($requestString, 1, strlen($requestString));
+				return substr($queryString, 1, strlen($queryString));
 			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Compile the "body" portions of the query.
+	 *
+	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
+	 * @return string
+	 */
+	protected function compileBody(Builder $query)
+	{
+		$body = [];
+
+		$hasBody = ! is_null($query->body);
+
+		if ( $hasBody ) {
+			foreach ($query->body as $postField) {
+				$body[$postField['column']] = $postField['value'];
+			}
+
+			if ( count($body) > 0 ) return $body;
 		}
 
 		return '';

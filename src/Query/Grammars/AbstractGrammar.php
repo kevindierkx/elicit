@@ -3,11 +3,11 @@
 abstract class AbstractGrammar {
 
 	/**
-	 * The wheres that where used for the path.
+	 * The parameters that are used for the path.
 	 *
 	 * @var array
 	 */
-	protected $replacedWheres = array();
+	protected $replacedParameters = array();
 
 	/**
 	 * Check for named parameters in the path.
@@ -22,7 +22,6 @@ abstract class AbstractGrammar {
 
 	/**
 	 * Replace all of the named parameters in the path.
-	 * Removes them from the query in the process.
 	 *
 	 * @param  string  $path
 	 * @param  array   $query
@@ -48,8 +47,8 @@ abstract class AbstractGrammar {
 
 			// When the named parameter is found we add it to the replaced wheres
 			// and replace it in the path.
-			if ($hasParameter) {
-				$grammar->addReplacedWhere($parameter);
+			if ( $hasParameter ) {
+				$grammar->addReplacedParameter($parameter);
 
 				return $parameter['value'];
 			}
@@ -62,27 +61,27 @@ abstract class AbstractGrammar {
 	}
 
 	/**
-	 * Add where to the replacedWheres variable.
+	 * Add parameter to the replaced parameters variable.
 	 *
-	 * @param  array  $where
+	 * @param  array  $parameter
 	 */
-	public function addReplacedWhere(array $where)
+	public function addReplacedParameter(array $parameter)
 	{
-		$this->replacedWheres[] = $where;
+		$this->replacedParameters[] = $parameter;
 	}
 
 	/**
-	 * Validate the existence of a replaced where.
+	 * Validate the existence of a replaced parameter.
 	 *
-	 * @param  array   $where
+	 * @param  array   $parameter
 	 * @return boolean
 	 */
-	public function hasReplacedWhere(array $where)
+	public function hasReplacedParameter(array $parameter)
 	{
-		foreach ($this->replacedWheres as $replacedWhere) {
+		foreach ($this->replacedParameters as $replacedParameter) {
 			if (
-				$replacedWhere['column'] === $where['column'] &&
-				$replacedWhere['value']  === $where['value']
+				$replacedParameter['column'] === $parameter['column'] &&
+				$replacedParameter['value']  === $parameter['value']
 			) {
 				return true;
 			}
