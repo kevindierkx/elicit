@@ -1,5 +1,6 @@
 <?php namespace Kevindierkx\Elicit\Elicit;
 
+use Closure;
 use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
 
 class Builder {
@@ -66,7 +67,7 @@ class Builder {
 	}
 
 	/**
-	 * Execute the query and get the first result.
+	 * Execute a "show" on the API and get the first result.
 	 *
 	 * @return \Kevindierkx\Elicit\Elicit\Model|static|null
 	 */
@@ -76,14 +77,13 @@ class Builder {
 
 		$this->query->from($path);
 
-		return $this->take(1)->get()->first();
+		return $this->get()->first();
 	}
 
 	/**
-	 * Execute the query and get the first result or throw an exception.
+	 * Execute a "show" on the API and get the first result or throw an exception.
 	 *
 	 * @return \Kevindierkx\Elicit\Elicit\Model|static
-	 *
 	 * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
 	 */
 	public function firstOrFail()
@@ -94,7 +94,7 @@ class Builder {
 	}
 
 	/**
-	 * Execute the query statement.
+	 * Execute an "index" on the API.
 	 *
 	 * @return \Kevindierkx\Elicit\Elicit\Collection|static
 	 */
@@ -107,7 +107,6 @@ class Builder {
 		// path, since the index path is supposed to return collections.
 		if ( ! $hasFrom ) {
 			$path = $this->model->getPath('index');
-
 			$this->query->from($path);
 		}
 
@@ -117,7 +116,21 @@ class Builder {
 	}
 
 	/**
-	 * Get the hydrated models without eager loading.
+	 * Execute a "delete" on the API.
+	 *
+	 * @return mixed
+	 */
+	public function delete()
+	{
+		$path = $this->model->getPath('destroy');
+
+		$this->query->from($path);
+
+		return $this->query->delete();
+	}
+
+	/**
+	 * Get the hydrated models.
 	 *
 	 * @param  array  $columns
 	 * @return \Kevindierkx\Elicit\Elicit\Model

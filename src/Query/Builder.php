@@ -36,13 +36,6 @@ class Builder {
 	public $body;
 
 	/**
-	 * The maximum number of records to return.
-	 *
-	 * @var int
-	 */
-	public $limit;
-
-	/**
 	 * The API query grammar instance.
 	 *
 	 * @var \Kevindierkx\Elicit\Query\Grammars\Grammar
@@ -77,7 +70,7 @@ class Builder {
 	}
 
 	/**
-	 * Execute a query for a single record by ID.
+	 * Find a model by its ID.
 	 *
 	 * @param  int    $id
 	 * @param  array  $columns
@@ -89,19 +82,19 @@ class Builder {
 	}
 
 	/**
-	 * Execute the query and get the first result.
+	 * Execute a "show" on the API and get the first result.
 	 *
 	 * @return mixed|static
 	 */
 	public function first()
 	{
-		$results = $this->take(1)->get();
+		$results = $this->get();
 
 		return count($results) > 0 ? reset($results) : null;
 	}
 
 	/**
-	 * Execute the query.
+	 * Execute an "index" on the API.
 	 *
 	 * @param  array  $columns
 	 * @return array|static[]
@@ -112,13 +105,31 @@ class Builder {
 	}
 
 	/**
+	 * Execute a "delete" on the API.
+	 *
+	 * @param  mixed  $id
+	 * @return int
+	 */
+	public function delete($id = null)
+	{
+		// If an ID is passed to the method, we will set the where clause to check
+		// the ID to allow developers to simply and quickly remove a single row
+		// from their database without manually specifying the where clauses.
+		if ( ! is_null($id)) $this->where('id', '=', $id);
+
+		return $this->processor->processRequest($this, $this->runRequest());
+	}
+
+	/**
 	 * Run the query against the connection.
 	 *
 	 * @return array
 	 */
 	protected function runRequest()
 	{
-		return $this->connection->request($this->toRequest($this));
+		return $this->connection->request(
+			$this->grammar->compileRequest($this)
+		);
 	}
 
 	/**
@@ -293,30 +304,6 @@ class Builder {
 		}
 
 		return $this;
-	}
-
-	/**
-	 * Set the "limit" value of the query.
-	 *
-	 * @param  int  $value
-	 * @return $this
-	 */
-	public function limit($value)
-	{
-		if ( $value > 0 ) $this->limit = $value;
-
-		return $this;
-	}
-
-	/**
-	 * Alias to set the "limit" value of the query.
-	 *
-	 * @param  int  $value
-	 * @return \Kevindierkx\Elicit\Query\Builder|static
-	 */
-	public function take($value)
-	{
-		return $this->limit($value);
 	}
 
 	/**

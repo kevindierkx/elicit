@@ -218,9 +218,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	{
 		$instance = new static;
 
-		$path = $instance->getPath('index');
-
-		return $instance->newQuery()->from($path)->get();
+		return $instance->newQuery()->get();
 	}
 
 	/**
@@ -231,8 +229,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	public static function find($id)
 	{
-		if (is_array($id) && empty($id)) return new Collection;
-
 		$instance = new static;
 
 		return $instance->newQuery()->find($id);
@@ -316,6 +312,65 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 			->postField($attributes)
 			->from($path)
 			->get();
+	}
+
+	/**
+	 * Destroy the model for the given ID.
+	 *
+	 * @param  int  $ids
+	 * @return bool
+	 */
+	public static function destroy($id)
+	{
+		$instance = new static;
+
+		// We will actually get the models from the API and call delete on it.
+		// This way its events get fired properly with a correct set of attributes
+		// in case the developers wants to check these.
+		$key   = $instance->getKeyName();
+		$model = $instance->where($key, $id)->first();
+
+		if ( $model->delete() ) return true;
+
+		return false;
+	}
+
+	/**
+	 * Delete the model.
+	 *
+	 * @return bool|null
+	 * @throws \Exception
+	 */
+	public function delete()
+	{
+		if ( is_null($this->primaryKey) ) {
+			throw new \Exception("No primary key defined on model.");
+		}
+
+		if ( $this->exists ) {
+			if ( $this->fireModelEvent('deleting') === false ) return false;
+
+			$this->performDeleteOnModel();
+
+			$this->exists = false;
+
+			// Once the model has been deleted, we will fire off the deleted event so that
+			// the developers may hook into post-delete operations. We will then return
+			// a boolean true as the delete is presumably successful on the database.
+			$this->fireModelEvent('deleted', false);
+
+			return true;
+		}
+	}
+
+	/**
+	 * Perform the actual delete query on this model instance.
+	 */
+	protected function performDeleteOnModel()
+	{
+		$this->newQuery()
+			->where($this->getKeyName(), $this->getKey())
+			->delete();
 	}
 
 	/**
