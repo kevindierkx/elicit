@@ -13,7 +13,7 @@ class Processor {
 	 */
 	public function processRequest(Builder $query, $results)
 	{
-		return $results;
+		return [$results];
 	}
 
 }
