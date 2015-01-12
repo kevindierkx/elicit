@@ -2,6 +2,7 @@
 
 use ArrayAccess;
 use JsonSerializable;
+use Exception;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
@@ -311,7 +312,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 		return $instance->newQuery()
 			->postField($attributes)
 			->from($path)
-			->get();
+			->create();
 	}
 
 	/**
@@ -343,21 +344,21 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 	 */
 	public function delete()
 	{
-		if ( is_null($this->primaryKey) ) {
-			throw new \Exception("No primary key defined on model.");
+		if ( is_null($this->primaryKey) ||  is_null($this->getKey()) ) {
+			throw new Exception("No primary key defined on model.");
 		}
 
 		if ( $this->exists ) {
 			if ( $this->fireModelEvent('deleting') === false ) return false;
 
-			$this->performDeleteOnModel();
+			if ( ! $this->performDeleteOnModel() ) return false;
 
 			$this->exists = false;
 
 			// Once the model has been deleted, we will fire off the deleted event so that
 			// the developers may hook into post-delete operations. We will then return
-			// a boolean true as the delete is presumably successful on the database.
-			$this->fireModelEvent('deleted', false);
+			// a boolean true which indicated the success of the delete operation on the API.
+			$this->fireModelEvent('deleted', true);
 
 			return true;
 		}
@@ -365,12 +366,14 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
 
 	/**
 	 * Perform the actual delete query on this model instance.
+	 *
+	 * @return boolean
 	 */
 	protected function performDeleteOnModel()
 	{
-		$this->newQuery()
-			->where($this->getKeyName(), $this->getKey())
-			->delete();
+		return $this->newQuery()
+			       ->where($this->getKeyName(), $this->getKey())
+			       ->delete();
 	}
 
 	/**

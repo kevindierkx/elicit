@@ -124,9 +124,8 @@ class Builder {
 	{
 		$path = $this->model->getPath('destroy');
 
-		$this->query->from($path);
-
-		return $this->query->delete();
+		return $this->query->from($path)
+				->delete();
 	}
 
 	/**
