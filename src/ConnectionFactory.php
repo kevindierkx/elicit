@@ -5,7 +5,6 @@ use Kevindierkx\Elicit\Connector\ConnectorInterface;
 use Kevindierkx\Elicit\Connector\BasicConnector;
 use Kevindierkx\Elicit\Connector\BasicAuthConnector;
 use Kevindierkx\Elicit\Connection\Connection;
-use Kevindierkx\Elicit\Connection\FractalConnection;
 
 class ConnectionFactory {
 
@@ -119,9 +118,6 @@ class ConnectionFactory {
 		switch ($driver) {
 			case 'basic':
 				return new Connection($connector, $config);
-
-			case 'fractal':
-				return new FractalConnection($connector, $config);
 		}
 
 		throw new \InvalidArgumentException("Unsupported driver [$driver]");

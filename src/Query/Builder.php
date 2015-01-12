@@ -50,7 +50,7 @@ class Builder {
 	protected $processor;
 
 	/**
-	 * Create a new reuqets builder instance.
+	 * Create a new request builder instance.
 	 *
 	 * @param  \Kevindierkx\Elicit\Connection\ConnectionInterface  $connection
 	 * @param  \Kevindierkx\Elicit\Query\Grammars\Grammar          $grammar
@@ -101,23 +101,42 @@ class Builder {
 	 */
 	public function get()
 	{
-		return $this->processor->processRequest($this, $this->runRequest());
+		return $this->processor->processShowRequest($this, $this->runRequest());
+	}
+
+	/**
+	 * Execute an "create" on the API.
+	 * @return array|static[]
+	 */
+	public function create()
+	{
+		return $this->processor->processCreateRequest($this, $this->runRequest());
+	}
+
+	/**
+	 * Execute an "update" on the API.
+	 *
+	 * @return array|static[]
+	 */
+	public function update()
+	{
+		return $this->processor->processUpdateRequest($this, $this->runRequest());
 	}
 
 	/**
 	 * Execute a "delete" on the API.
 	 *
 	 * @param  mixed  $id
-	 * @return int
+	 * @return boolean
 	 */
 	public function delete($id = null)
 	{
 		// If an ID is passed to the method, we will set the where clause to check
-		// the ID to allow developers to simply and quickly remove a single row
-		// from their database without manually specifying the where clauses.
+		// the ID to allow developers to simply and quickly remove a single item
+		// without manually specifying the where clauses.
 		if ( ! is_null($id)) $this->where('id', '=', $id);
 
-		return $this->processor->processRequest($this, $this->runRequest());
+		return $this->processor->processDeleteRequest($this, $this->runRequest());
 	}
 
 	/**
@@ -127,9 +146,7 @@ class Builder {
 	 */
 	protected function runRequest()
 	{
-		return $this->connection->request(
-			$this->grammar->compileRequest($this)
-		);
+		return $this->connection->request($this->grammar->compileRequest($this));
 	}
 
 	/**
