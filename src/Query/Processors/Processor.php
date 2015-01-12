@@ -5,13 +5,13 @@ use Kevindierkx\Elicit\Query\Builder;
 class Processor {
 
 	/**
-	 * Process the results of both an "Index" and "Show" API request
+	 * Process the results of an API request.
 	 *
 	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
 	 * @param  array  $results
-	 * @return array|null
+	 * @return array
 	 */
-	public function processShowRequest(Builder $query, $results)
+	protected function processRequest(Builder $query, $results)
 	{
 		// Here we validate the results being returned to be associative.
 		// When they are not we wrap them in an array making it easier for
@@ -24,6 +24,18 @@ class Processor {
 	}
 
 	/**
+	 * Process the results of both an "Index" and "Show" API request
+	 *
+	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
+	 * @param  array  $results
+	 * @return array
+	 */
+	public function processShowRequest(Builder $query, $results)
+	{
+		return $this->processRequest($query, $results);
+	}
+
+	/**
 	 * Process the results of an "Create" API request
 	 *
 	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
@@ -32,7 +44,7 @@ class Processor {
 	 */
 	public function processCreateRequest(Builder $query, $results)
 	{
-		return [$results];
+		return $this->processRequest($query, $results);
 	}
 
 	/**
@@ -40,11 +52,11 @@ class Processor {
 	 *
 	 * @param  \Kevindierkx\Elicit\Query\Builder  $query
 	 * @param  array  $results
-	 * @return array|null
+	 * @return array
 	 */
 	public function processUpdateRequest(Builder $query, $results)
 	{
-		return $results;
+		return $this->processRequest($query, $results);
 	}
 
 	/**
