@@ -1,7 +1,6 @@
 <?php namespace Kevindierkx\Elicit;
 
 use Illuminate\Support\Str;
-use Illuminate\Contracts\Events\Dispatcher;
 use Kevindierkx\Elicit\Connection\Connection;
 use Kevindierkx\Elicit\ConnectionFactory;
 
@@ -57,29 +56,13 @@ class ApiManager implements ConnectionResolverInterface {
 	 */
 	public function connection($name = null)
 	{
-		list($name, $type) = $this->parseConnectionName($name);
-
-		if (! isset($this->connections[$name])) {
+		if ( ! isset($this->connections[$name]) ) {
 			$connection = $this->makeConnection($name);
 
 			$this->connections[$name] = $this->prepare($connection);
 		}
 
 		return $this->connections[$name];
-	}
-
-	/**
-	 * Parse the connection into an array of the name and read / write type.
-	 *
-	 * @param  string  $name
-	 * @return array
-	 */
-	protected function parseConnectionName($name)
-	{
-		$name = $name ?: $this->getDefaultConnection();
-
-		return Str::endsWith($name, ['::read', '::write'])
-                            ? explode('::', $name, 2) : [$name, null];
 	}
 
 	/**
@@ -119,38 +102,9 @@ class ApiManager implements ConnectionResolverInterface {
 	 */
 	protected function prepare(Connection $connection)
 	{
-		// Here we make sure a compatible events dispatcher is available.
-		// When the evens dispatcher is not of the required instance we wont
-		// set is. This will disable events but should not impact the application.
-		if (
-			$this->app->bound('events') &&
-			$this->app->make('events') instanceof Dispatcher
-		) {
+		if ( $this->app->bound('events') ) {
 			$connection->setEventDispatcher($this->app['events']);
 		}
-
-		// The API connection can also utilize a cache manager instance when cache
-		// functionality is used on queries, which provides an expressive interface
-		// to caching both fluent queries and Eloquent queries that are executed.
-		// $app = $this->app;
-
-		// $connection->setCacheManager(function() use ($app) {
-		// 	return $app['cache'];
-		// });
-
-		// We will setup a Closure to resolve the paginator instance on the connection
-		// since the Paginator isn't used on every request and needs quite a few of
-		// our dependencies. It'll be more efficient to lazily resolve instances.
-		// $connection->setPaginator(function() use ($app) {
-		// 	return $app['paginator'];
-		// });
-
-		// Here we'll set a reconnector callback. This reconnector can be any callable
-		// so we will set a Closure to reconnect from this manager with the name of
-		// the connection, which will allow us to reconnect from the connections.
-		// $connection->setReconnector(function($connection) {
-		// 	$this->reconnect($connection->getName());
-		// });
 
 		return $connection;
 	}
