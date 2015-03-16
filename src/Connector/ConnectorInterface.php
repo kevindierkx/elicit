@@ -1,7 +1,5 @@
 <?php namespace Kevindierkx\Elicit\Connector;
 
-use Closure;
-
 interface ConnectorInterface {
 
 	/**

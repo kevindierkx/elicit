@@ -1,5 +1,7 @@
 <?php namespace Kevindierkx\Elicit;
 
+use Kevindierkx\Elicit\Connection\Connection;
+
 class ConnectionResolver implements ConnectionResolverInterface {
 
 	/**
@@ -43,7 +45,7 @@ class ConnectionResolver implements ConnectionResolverInterface {
 	 * Add a connection to the resolver.
 	 *
 	 * @param  string  $name
-	 * @param  \Illuminate\Database\Connection  $connection
+	 * @param  \Kevindierkx\Elicit\Connection\Connection  $connection
 	 * @return void
 	 */
 	public function addConnection($name, Connection $connection)
