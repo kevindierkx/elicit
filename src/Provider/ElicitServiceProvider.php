@@ -8,9 +8,7 @@ use Kevindierkx\Elicit\ConnectionFactory;
 class ElicitServiceProvider extends ServiceProvider {
 
 	/**
-	 * Bootstrap the application events.
-	 *
-	 * @return void
+	 * {@inheritdoc}
 	 */
 	public function boot()
 	{
@@ -22,9 +20,7 @@ class ElicitServiceProvider extends ServiceProvider {
 	}
 
 	/**
-	 * Register the service provider.
-	 *
-	 * @return void
+	 * {@inheritdoc}
 	 */
 	public function register()
 	{

@@ -1,7 +1,7 @@
 <?php namespace Kevindierkx\Elicit\Connection;
 
 use Closure;
-use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Events\Dispatcher;
 use Kevindierkx\Elicit\QueryException;
 use Kevindierkx\Elicit\Connector\Connector;
 use Kevindierkx\Elicit\Query\Grammars\Grammar;
@@ -340,7 +340,7 @@ class Connection implements ConnectionInterface {
 	/**
 	 * Get the event dispatcher used by the connection.
 	 *
-	 * @return \Illuminate\Contracts\Events\Dispatcher
+	 * @return \Illuminate\Events\Dispatcher
 	 */
 	public function getEventDispatcher()
 	{
@@ -350,8 +350,7 @@ class Connection implements ConnectionInterface {
 	/**
 	 * Set the event dispatcher instance on the connection.
 	 *
-	 * @param  \Illuminate\Contracts\Events\Dispatcher
-	 * @return void
+	 * @param  \Illuminate\Events\Dispatcher
 	 */
 	public function setEventDispatcher(Dispatcher $events)
 	{

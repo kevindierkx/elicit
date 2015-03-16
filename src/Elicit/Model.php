@@ -1,17 +1,14 @@
 <?php namespace Kevindierkx\Elicit\Elicit;
 
 use ArrayAccess;
-use JsonSerializable;
 use Exception;
-
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Events\Dispatcher;
-
+use Illuminate\Events\Dispatcher;
+use Illuminate\Support\Contracts\ArrayableInterface;
+use Illuminate\Support\Contracts\JsonableInterface;
 use Kevindierkx\Elicit\ConnectionResolverInterface as Resolver;
 use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
 
-abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializable {
+abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterface {
 
 	/**
 	 * The connection name for the model.
