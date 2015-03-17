@@ -546,6 +546,26 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
 	}
 
 	/**
+	 * Get paths from the model.
+	 *
+	 * @return array
+	 */
+	public function getPaths()
+	{
+		return $this->paths;
+	}
+
+	/**
+	 * Set paths for the model.
+	 *
+	 * @return array
+	 */
+	public function setPaths(array $paths)
+	{
+		$this->paths = $paths;
+	}
+
+	/**
 	 * Get the paths for the model merged with the path defaults.
 	 *
 	 * @return mixed
