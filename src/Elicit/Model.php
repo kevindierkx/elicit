@@ -471,14 +471,18 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
 	}
 
 	/**
-	 * Check if a path has been registered.
+	 * Check if a path has all the required values.
 	 *
 	 * @param  string  $key
 	 * @return boolean
 	 */
 	public function hasPath($key)
 	{
-		return isset($this->paths[$key]);
+		$pathValue = $this->getPathValue($key);
+
+		$pathMethod = $this->getPathMethod($key);
+
+		return (! is_null($pathValue) && ! is_null($pathMethod));
 	}
 
 	/**
@@ -489,10 +493,8 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
 	 */
 	public function getPath($key)
 	{
-		$paths = $this->getMergedPaths();
-
-		if ( array_key_exists($key, $paths) ) {
-			return $paths[$key];
+		if ( $this->hasPath($key) ) {
+			return $this->getMergedPath($key);
 		}
 	}
 
@@ -503,13 +505,13 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
 	 * @param string  $value
 	 * @param mixed   $method
 	 */
-	public function setPath($path, $value, $method = null)
+	public function setPath($path, $value = null, $method = null)
 	{
-		$this->paths[$path] = ['path' => $value];
+		$this->paths[$path] = [];
 
-		if ( ! is_null($method) ) {
-			$this->paths[$path]['method'] = $method;
-		}
+		if ( ! is_null($value) ) $this->paths[$path]['path'] = $value;
+
+		if ( ! is_null($method) ) $this->paths[$path]['method'] = $method;
 	}
 
 	/**
@@ -520,10 +522,10 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
 	 */
 	public function getPathValue($key)
 	{
-		$hasPath = isset($paths[$key]['method']);
+		$path = $this->getMergedPath($key);
 
-		if ( $hasPath ) {
-			return $this->paths[$key]['path'];
+		if ( isset($path['path']) ) {
+			return $path['path'];
 		}
 	}
 
@@ -535,13 +537,10 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
 	 */
 	public function getPathMethod($key)
 	{
-		$paths = $this->getMergedPaths();
+		$path = $this->getMergedPath($key);
 
-		$hasPath   = array_key_exists($key, $paths);
-		$hasMethod = isset($paths[$key]['method']);
-
-		if ( $hasPath && $hasMethod ) {
-			return $paths[$key]['method'];
+		if ( isset($path['method']) ) {
+			return $path['method'];
 		}
 	}
 
@@ -568,17 +567,41 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
 	/**
 	 * Get the paths for the model merged with the path defaults.
 	 *
-	 * @return mixed
+	 * @return array
 	 */
-	public function getMergedPaths()
+	public function getMergedPath($key)
 	{
-		$paths = [];
+		$mergedPath = [];
 
-		foreach ($this->paths as $key => $value) {
-			$paths[$key] = array_merge($this->defaults[$key], $value);
+		$hasCatchAll = isset($this->defaults['*']);
+		$hasDefault  = isset($this->defaults[$key]);
+		$hasPath     = isset($this->paths[$key]);
+
+		// Before we try merging paths we check the defaults
+		// for a catch all and a default for the requested path.
+		if ( $hasCatchAll && $hasDefault ) {
+			$mergedPath = array_merge($this->defaults['*'], $this->defaults[$key]);
 		}
 
-		return $paths;
+		// When only a catch all exists we update the
+		// 'base' path with the catch all.
+		elseif ( $hasCatchAll ) {
+			$mergedPath = $this->defaults['*'];
+		}
+
+		// When only a default for the requested path exists we
+		// update the 'base' path with the defaults.
+		elseif ( $hasDefault ) {
+			$mergedPath = $this->defaults[$key];
+		}
+
+		// Lastly when a specific path configuration exists for
+		// the requested path we merge it with the 'base' path.
+		if ( $hasPath ) {
+			return array_merge($mergedPath, $this->paths[$key]);
+		}
+
+		return $mergedPath;
 	}
 
 	/**
