@@ -1,126 +1,135 @@
 <?php namespace Kevindierkx\Elicit;
 
 use Illuminate\Container\Container;
+use Kevindierkx\Elicit\Connection\ConnectionInterface;
 use Kevindierkx\Elicit\Connector\ConnectorInterface;
 use Kevindierkx\Elicit\Connector\BasicConnector;
 use Kevindierkx\Elicit\Connector\BasicAuthConnector;
 use Kevindierkx\Elicit\Connection\Connection;
 
-class ConnectionFactory {
+class ConnectionFactory
+{
+    /**
+     * The IoC container instance.
+     *
+     * @var \Illuminate\Container\Container
+     */
+    protected $container;
 
-	/**
-	 * The IoC container instance.
-	 *
-	 * @var \Illuminate\Container\Container
-	 */
-	protected $container;
+    /**
+     * Create a new connection factory instance.
+     *
+     * @param Container $container
+     */
+    public function __construct(Container $container)
+    {
+        $this->container = $container;
+    }
 
-	/**
-	 * Create a new connection factory instance.
-	 *
-	 * @param  \Illuminate\Container\Container  $container
-	 * @return void
-	 */
-	public function __construct(Container $container)
-	{
-		$this->container = $container;
-	}
+    /**
+     * Establish a API connection based on the configuration.
+     *
+     * @param  array   $config
+     * @param  string  $name
+     * @return \
+     *     */
 
-	/**
-	 * Establish a API connection based on the configuration.
-	 *
-	 * @param  array   $config
-	 * @param  string  $name
-	 * @return \Illuminate\Database\Connection
-	 */
-	public function make(array $config, $name = null)
-	{
-		$config = $this->parseConfig($config, $name);
+    /**
+     * @param array $config
+     * @param null $name
+     * @return Connection\ConnectionInterface
+     */
+    public function make(array $config, $name = null)
+    {
+        $config = $this->parseConfig($config, $name);
 
-		return $this->createSingleConnection($config);
-	}
+        return $this->createSingleConnection($config);
+    }
 
-	/**
-	 * Create a single database connection instance.
-	 *
-	 * @param  array  $config
-	 * @return \Kevindierkx\Elicit\Connection\ConnectionInterface
-	 */
-	protected function createSingleConnection(array $config)
-	{
-		$connector = $this->createConnector($config)->connect($config);
+    /**
+     * Create a single database connection instance.
+     *
+     * @param  array  $config
+     * @return \Kevindierkx\Elicit\Connection\ConnectionInterface
+     */
 
-		return $this->createConnection($config['driver'], $connector, $config);
-	}
+    /**
+     * @param array $config
+     * @return Connection\ConnectionInterface
+     */
+    protected function createSingleConnection(array $config)
+    {
+        $connector = $this->createConnector($config)->connect($config);
 
-	/**
-	 * Parse and prepare the API configuration.
-	 *
-	 * @param  array   $config
-	 * @param  string  $name
-	 * @return array
-	 */
-	protected function parseConfig(array $config, $name)
-	{
-		return array_merge($config, ['name' => $name]);
-	}
+        return $this->createConnection($config['driver'], $connector, $config);
+    }
 
-	/**
-	 * Create a connector instance based on the configuration.
-	 *
-	 * @param  array  $config
-	 * @return \Illuminate\Database\Connectors\ConnectorInterface
-	 *
-	 * @throws \InvalidArgumentException
-	 */
-	public function createConnector(array $config)
-	{
-		// The authentication driver is optional, but the connector
-		// is still required. We set the auth driver to the default
-		// here. This way we can use container bindings in return.
-		$driver = array_get($config, 'auth', 'basic');
+    /**
+     * Parse and prepare the API configuration.
+     *
+     * @param  array   $config
+     * @param  string  $name
+     * @return array
+     */
+    protected function parseConfig(array $config, $name)
+    {
+        return array_merge($config, ['name' => $name]);
+    }
 
-		if ($this->container->bound($key = "elicit.connector.{$driver}")) {
-			return $this->container->make($key);
-		}
+    /**
+     * Create a connector instance based on the configuration.
+     *
+     * @param  array  $config
+     * @return \Illuminate\Database\Connectors\ConnectorInterface
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function createConnector(array $config)
+    {
+        // The authentication driver is optional, but the connector
+        // is still required. We set the auth driver to the default
+        // here. This way we can use container bindings in return.
+        $driver = array_get($config, 'auth', 'basic');
 
-		switch ($driver) {
-			case 'basic':
-				return new BasicConnector;
+        if ($this->container->bound($key = "elicit.connector.{$driver}")) {
+            return $this->container->make($key);
+        }
 
-			case 'basic-auth':
-				return new BasicAuthConnector;
-		}
+        switch ($driver) {
+            case 'basic':
+                return new BasicConnector;
 
-		throw new \InvalidArgumentException("Unsupported authentication driver [{$driver}]");
-	}
+            case 'basic-auth':
+                return new BasicAuthConnector;
+        }
 
-	/**
-	 * Create a new connection instance.
-	 *
-	 * @param  string  $driver
-	 * @param  \Kevindierkx\Elicit\Connector\ConnectorInterface  $connector
-	 * @param  array   $config
-	 * @return \Kevindierkx\Elicit\Connection\ConnectionInterface
-	 *
-	 * @throws \InvalidArgumentException
-	 */
-	protected function createConnection($driver, ConnectorInterface $connector, array $config = array())
-	{
-		if (! isset($driver)) {
-			throw new \InvalidArgumentException("A driver must be specified.");
-		}
+        throw new \InvalidArgumentException("Unsupported authentication driver [{$driver}]");
+    }
 
-		if ($this->container->bound($key = "elicit.connection.{$driver}")) {
-			return $this->container->make($key, [$connector, $config]);
-		}
+    /**
+     * Create a new connection instance.
+     *
+     * @param $driver
+     * @param ConnectorInterface $connector
+     * @param array $config
+     * @return ConnectionInterface
+     * @throws \InvalidArgumentException
+     */
+    protected function createConnection($driver, ConnectorInterface $connector, array $config = array())
+    {
+        if (! isset($driver)) {
+            throw new \InvalidArgumentException("A driver must be specified.");
+        }
 
-		switch ($driver) {
-			case 'basic':
-				return new Connection($connector, $config);
-		}
+        if ($this->container->bound($key = "elicit.connection.{$driver}")) {
+            return $this->container->make($key, [$connector, $config]);
+        }
 
-		throw new \InvalidArgumentException("Unsupported driver [$driver]");
-	}
+        switch ($driver) {
+            case 'basic':
+                return new Connection($connector, $config);
+        }
 
+        throw new \InvalidArgumentException("Unsupported driver [$driver]");
+    }
 }
