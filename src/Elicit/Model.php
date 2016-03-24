@@ -3,7 +3,7 @@
 use ArrayAccess;
 use JsonSerializable;
 use Kevindierkx\Elicit\ConnectionResolverInterface;
-use Kevindierkx\Elicit\Dispatcher\EventDispatcherInterface;
+use Kevindierkx\Elicit\Event\EventDispatcherInterface;
 use Kevindierkx\Elicit\Elicit\Collection;
 use Kevindierkx\Elicit\Elicit\Exception\ModelNotFoundException;
 use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
