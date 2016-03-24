@@ -1,10 +1,14 @@
-<?php namespace Kevindierkx\Elicit\Connector;
+<?php
+
+namespace Kevindierkx\Elicit\Connector;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Message\Request;
 use GuzzleHttp\Message\Response;
+use InvalidArgumentException;
+use RuntimeException;
 
-class Connector
+abstract class AbstractConnector
 {
     /**
      * The request client instance used during requests.
@@ -35,28 +39,32 @@ class Connector
     protected $headers;
 
     /**
+     * Establish an API connection.
+     *
+     * @param  array  $config
+     * @return self
+     */
+    abstract public function connect(array $config);
+
+    /**
      * Initialize connector.
      *
-     * @param array $config
-     * @return $this
-     * @throws \InvalidArgumentException
+     * @param  array  $config
+     * @return self
+     * @throws InvalidArgumentException
      */
     public function createConnection(array $config)
     {
-        $hasHost = isset($config['host']);
-
-        if (! $hasHost) {
-            throw new \InvalidArgumentException("No host provided for connection [" . $config['name'] . "]");
+        if (! isset($config['host'])) {
+            throw new InvalidArgumentException("No host provided.");
         }
 
         $this->setHost($config['host']);
 
-        $hasHeaders = isset($config['headers']);
-
         // We check the configuration for request headers. Some API's require
         // certain headers for all requests. Providing them in the configuration
         // makes it easier to provide these headers on each request.
-        if ($hasHeaders) {
+        if (isset($config['headers'])) {
             $this->setHeaders($config['headers']);
         }
 
@@ -66,8 +74,8 @@ class Connector
     /**
      * Prepare a new request for execution.
      *
-     * @param array $query
-     * @return $this
+     * @param  array  $query
+     * @return self
      */
     public function prepare(array $query)
     {
@@ -129,9 +137,7 @@ class Connector
      */
     protected function prepareHeaders(array $query)
     {
-        $hasHeaders = ! is_null($this->headers);
-
-        if ($hasHeaders) {
+        if (! is_null($this->headers)) {
             return $this->headers;
         }
 
@@ -179,7 +185,7 @@ class Connector
      * @param  \GuzzleHttp\Message\Response  $response
      * @return array
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     protected function parseResponse(Response $response)
     {
@@ -187,13 +193,14 @@ class Connector
 
         switch ($contentType) {
             case 'application/json':
+            case 'application/vnd.api+json':
                 return $response->json();
 
             case 'application/xml':
                 return $response->xml();
         }
 
-        throw new \RuntimeException("Unsupported returned content-type [$contentType]");
+        throw new RuntimeException("Unsupported returned content-type [$contentType]");
     }
 
     /**
@@ -209,8 +216,8 @@ class Connector
     /**
      * Set request client instance.
      *
-     * @param Client $client
-     * @return $this
+     * @param  Client  $client
+     * @return self
      */
     public function setClient(Client $client)
     {
@@ -232,8 +239,8 @@ class Connector
     /**
      * Set request instance.
      *
-     * @param Request $request
-     * @return $this
+     * @param  Request  $request
+     * @return self
      */
     public function setRequest(Request $request)
     {
@@ -255,8 +262,8 @@ class Connector
     /**
      * Set host URL.
      *
-     * @param $host
-     * @return $this
+     * @param  string  $host
+     * @return self
      */
     public function setHost($host)
     {
@@ -278,8 +285,8 @@ class Connector
     /**
      * Set request headers.
      *
-     * @param array $headers
-     * @return $this
+     * @param  array  $headers
+     * @return self
      */
     public function setHeaders(array $headers)
     {

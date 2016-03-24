@@ -1,6 +1,10 @@
-<?php namespace Kevindierkx\Elicit\Connection;
+<?php
 
-class InvalidCredentialsException extends \RuntimeException
+namespace Kevindierkx\Elicit\Connection\Exception;
+
+use RuntimeException;
+
+class InvalidCredentialsException extends RuntimeException
 {
     /**
      * Name of the affected connection.

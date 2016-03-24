@@ -1,15 +1,18 @@
-<?php namespace Kevindierkx\Elicit;
+<?php
 
-use Kevindierkx\Elicit\Connection\Connection;
+namespace Kevindierkx\Elicit;
+
+use InvalidArgumentException;
+use Kevindierkx\Elicit\Connection\AbstractConnection;
 
 class ConnectionResolver implements ConnectionResolverInterface
 {
     /**
-     * All of the registered connections.
+     * All of the registered connection instances.
      *
      * @var array
      */
-    protected $connections = array();
+    protected $connections = [];
 
     /**
      * The default connection name.
@@ -21,10 +24,9 @@ class ConnectionResolver implements ConnectionResolverInterface
     /**
      * Create a new connection resolver instance.
      *
-     * ConnectionResolver constructor.
-     * @param array $connections
+     * @param  array  $connections
      */
-    public function __construct(array $connections = array())
+    public function __construct(array $connections = [])
     {
         foreach ($connections as $name => $connection) {
             $this->addConnection($name, $connection);
@@ -32,7 +34,10 @@ class ConnectionResolver implements ConnectionResolverInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get an API connection instance.
+     *
+     * @param  string  $name
+     * @return ConnectionInterface
      */
     public function connection($name = null)
     {
@@ -40,23 +45,15 @@ class ConnectionResolver implements ConnectionResolverInterface
             $name = $this->getDefaultConnection();
         }
 
+        if (! isset($this->connections[$name])) {
+            throw new InvalidArgumentException("Connection [{$name}] is not registered.");
+        }
+
         return $this->connections[$name];
     }
 
     /**
-     * Add a connection to the resolver.
-     *
-     * @param $name
-     * @param Connection $connection
-     * @return void
-     */
-    public function addConnection($name, Connection $connection)
-    {
-        $this->connections[$name] = $connection;
-    }
-
-    /**
-     * Check if a connection has been registered.
+     * Check if a connection instance has been registered.
      *
      * @param  string  $name
      * @return bool
@@ -67,7 +64,20 @@ class ConnectionResolver implements ConnectionResolverInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Add a connection instance to the resolver.
+     *
+     * @param  AbstractConnection  $connection
+     * @param  string              $name
+     */
+    public function addConnection(AbstractConnection $connection, $name)
+    {
+        $this->connections[$name] = $connection;
+    }
+
+    /**
+     * Get the default connection name.
+     *
+     * @return string
      */
     public function getDefaultConnection()
     {
@@ -75,7 +85,10 @@ class ConnectionResolver implements ConnectionResolverInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Set the default connection name.
+     *
+     * @param  string  $name
+     * @return self
      */
     public function setDefaultConnection($name)
     {

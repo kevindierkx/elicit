@@ -1,11 +1,16 @@
-<?php namespace Kevindierkx\Elicit\Connector;
+<?php
 
-class BasicAuthConnector extends Connector implements ConnectorInterface
+namespace Kevindierkx\Elicit\Connector;
+
+use RuntimeException;
+
+class BasicAuthConnector extends AbstractConnector
 {
     /**
-     * {@inheritdoc}
+     * Establish an API connection.
      *
-     * @throws \RuntimeException
+     * @param  array  $config
+     * @return self
      */
     public function connect(array $config)
     {
@@ -30,15 +35,15 @@ class BasicAuthConnector extends Connector implements ConnectorInterface
      *
      * @param  array  $config
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     protected function validateCredentials(array $config)
     {
         $hasCredentials = array_get($config, 'identifier') && array_get($config, 'secret');
 
         if (! $hasCredentials) {
-            throw new \RuntimeException(
-                "An identifier and secret are required for basic authentication for connection [" . $config['name'] . "]"
+            throw new RuntimeException(
+                "An identifier and secret are required for basic authentication."
             );
         }
     }

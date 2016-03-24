@@ -1,16 +1,16 @@
 <?php namespace Kevindierkx\Elicit\Query;
 
 use Closure;
-use Kevindierkx\Elicit\Connection\ConnectionInterface;
+use Kevindierkx\Elicit\Connection\AbstractConnection;
 use Kevindierkx\Elicit\Query\Grammars\Grammar;
 use Kevindierkx\Elicit\Query\Processors\Processor;
 
 class Builder
 {
     /**
-     * The API connection instance.
+     * The connection instance.
      *
-     * @var \Kevindierkx\Elicit\Connection\Connection
+     * @var AbstractConnection
      */
     protected $connection;
 
@@ -36,28 +36,28 @@ class Builder
     public $body;
 
     /**
-     * The API query grammar instance.
+     * The query grammar instance.
      *
-     * @var \Kevindierkx\Elicit\Query\Grammars\Grammar
+     * @var Grammar
      */
     protected $grammar;
 
     /**
-     * The database query post processor instance.
+     * The query post processor instance.
      *
-     * @var \Kevindierkx\Elicit\Query\Processors\Processor
+     * @var Processor
      */
     protected $processor;
 
     /**
      * Create a new request builder instance.
      *
-     * @param  \Kevindierkx\Elicit\Connection\ConnectionInterface  $connection
-     * @param  \Kevindierkx\Elicit\Query\Grammars\Grammar          $grammar
-     * @param  \Kevindierkx\Elicit\Query\Processors\Processor      $processor
+     * @param  AbstractConnection  $connection
+     * @param  Grammar             $grammar
+     * @param  Processor           $processor
      */
     public function __construct(
-        ConnectionInterface $connection,
+        AbstractConnection $connection,
         Grammar $grammar,
         Processor $processor
     ) {
@@ -345,9 +345,9 @@ class Builder
     }
 
     /**
-     * Get the database connection instance.
+     * Get the connection instance.
      *
-     * @return \Kevindierkx\Elicit\ConnectionInterface
+     * @return AbstractConnection
      */
     public function getConnection()
     {
@@ -355,9 +355,9 @@ class Builder
     }
 
     /**
-     * Get the database query processor instance.
+     * Get the query processor instance.
      *
-     * @return \Kevindierkx\Elicit\Query\Processors\Processor
+     * @return Processor
      */
     public function getProcessor()
     {
@@ -367,7 +367,7 @@ class Builder
     /**
      * Get the query grammar instance.
      *
-     * @return \Kevindierkx\Elicit\Query\Grammars\Grammar
+     * @return Grammar
      */
     public function getGrammar()
     {

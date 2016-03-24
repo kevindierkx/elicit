@@ -1,21 +1,23 @@
-<?php namespace Kevindierkx\Elicit\Connection;
+<?php
+
+namespace Kevindierkx\Elicit\Connection;
 
 use Closure;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
 use Illuminate\Events\Dispatcher;
-use Kevindierkx\Elicit\Connector\Connector;
-use Kevindierkx\Elicit\Connector\ConnectorInterface;
+use Kevindierkx\Elicit\Connection\Exception\InvalidCredentialsException;
+use Kevindierkx\Elicit\Connector\AbstractConnector;
 use Kevindierkx\Elicit\Query\Grammars\Grammar;
 use Kevindierkx\Elicit\Query\Processors\Processor;
 use Kevindierkx\Elicit\QueryException;
 
-class Connection implements ConnectionInterface
+abstract class AbstractConnection
 {
     /**
      * The active connector instance.
      *
-     * @var ConnectorInterface
+     * @var AbstractConnector
      */
     protected $connector;
 
@@ -59,15 +61,15 @@ class Connection implements ConnectionInterface
      *
      * @var array
      */
-    protected $config = array();
+    protected $config = [];
 
     /**
      * Create new API connection instance.
      *
-     * @param ConnectorInterface $connector
-     * @param array $config
+     * @param  AbstractConnector  $connector
+     * @param  array              $config
      */
-    public function __construct(ConnectorInterface $connector, array $config)
+    public function __construct(AbstractConnector $connector, array $config)
     {
         $this->connector = $connector;
 
@@ -82,6 +84,20 @@ class Connection implements ConnectionInterface
     }
 
     /**
+     * Get the default query grammar instance.
+     *
+     * @return Grammar
+     */
+    abstract public function getDefaultQueryGrammar();
+
+    /**
+     * Get the default post processor instance.
+     *
+     * @return Processor
+     */
+    abstract public function getDefaultPostProcessor();
+
+    /**
      * Set the query grammar to the default implementation.
      *
      * @return void
@@ -92,16 +108,6 @@ class Connection implements ConnectionInterface
     }
 
     /**
-     * Get the default query grammar instance.
-     *
-     * @return Grammar
-     */
-    protected function getDefaultQueryGrammar()
-    {
-        return new Grammar;
-    }
-
-    /**
      * Set the query post processor to the default implementation.
      *
      * @return void
@@ -109,16 +115,6 @@ class Connection implements ConnectionInterface
     public function useDefaultPostProcessor()
     {
         $this->postProcessor = $this->getDefaultPostProcessor();
-    }
-
-    /**
-     * Get the default post processor instance.
-     *
-     * @return Processor
-     */
-    protected function getDefaultPostProcessor()
-    {
-        return new Processor;
     }
 
     /**
@@ -161,11 +157,11 @@ class Connection implements ConnectionInterface
     /**
      * Run a SQL statement.
      *
-     * @param array $query
-     * @param Closure $callback
+     * @param  array    $query
+     * @param  Closure  $callback
      * @return array
-     * @throws \Kevindierkx\Elicit\Connection\InvalidCredentialsException
-     * @throws \Kevindierkx\Elicit\QueryException
+     * @throws InvalidCredentialsException
+     * @throws QueryException
      *
      * @throws \GuzzleHttp\Exception\RequestException
      * @throws \GuzzleHttp\Exception\ClientException  400 Errors
@@ -235,7 +231,7 @@ class Connection implements ConnectionInterface
     /**
      * Get the current API connector.
      *
-     * @return ConnectorInterface
+     * @return AbstractConnector
      */
     public function getConnector()
     {
@@ -245,8 +241,8 @@ class Connection implements ConnectionInterface
     /**
      * Set the API connector.
      *
-     * @param Connector $connector
-     * @return $this
+     * @param  AbstractConnector  $connector
+     * @return self
      */
     public function setConnector(Connector $connector)
     {
@@ -309,8 +305,8 @@ class Connection implements ConnectionInterface
     /**
      * Set the query grammar used by the connection.
      *
-     * @param Grammar $grammar
-     * @return $this
+     * @param  Grammar  $grammar
+     * @return self
      */
     public function setQueryGrammar(Grammar $grammar)
     {
@@ -332,8 +328,8 @@ class Connection implements ConnectionInterface
     /**
      * Set the query post processor used by the connection.
      *
-     * @param Processor $processor
-     * @return $this
+     * @param  Processor  $processor
+     * @return self
      */
     public function setPostProcessor(Processor $processor)
     {
@@ -345,7 +341,7 @@ class Connection implements ConnectionInterface
     /**
      * Get the event dispatcher used by the connection.
      *
-     * @return \Illuminate\Events\Dispatcher
+     * @return Dispatcher
      */
     public function getEventDispatcher()
     {
@@ -355,8 +351,8 @@ class Connection implements ConnectionInterface
     /**
      * Set the event dispatcher instance on the connection.
      *
-     * @param Dispatcher $events
-     * @return $this
+     * @param  Dispatcher  $events
+     * @return self
      */
     public function setEventDispatcher(Dispatcher $events)
     {

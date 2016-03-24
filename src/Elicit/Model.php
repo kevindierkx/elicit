@@ -5,7 +5,7 @@ use Exception;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Contracts\ArrayableInterface;
 use Illuminate\Support\Contracts\JsonableInterface;
-use Kevindierkx\Elicit\ConnectionResolverInterface as Resolver;
+use Kevindierkx\Elicit\ConnectionResolverInterface;
 use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
 
 abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterface
@@ -90,7 +90,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * The connection resolver instance.
      *
-     * @var \Kevindierkx\Elicit\ConnectionResolverInterface
+     * @var ConnectionResolverInterface
      */
     protected static $resolver;
 
@@ -673,7 +673,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * Get the database connection for the model.
      *
-     * @return \Illuminate\Database\Connection
+     * @return \Kevindierkx\Elicit\Connection\ConnectionInterface
      */
     public function getConnection()
     {
@@ -697,7 +697,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Resolve a connection instance.
      *
      * @param  string  $connection
-     * @return \Illuminate\Database\Connection
+     * @return \Kevindierkx\Elicit\Connection\ConnectionInterface
      */
     public static function resolveConnection($connection = null)
     {
@@ -707,7 +707,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * Get the connection resolver instance.
      *
-     * @return \Illuminate\Database\ConnectionResolverInterface
+     * @return ConnectionResolverInterface
      */
     public static function getConnectionResolver()
     {
@@ -717,10 +717,9 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * Set the connection resolver instance.
      *
-     * @param  \Illuminate\Database\ConnectionResolverInterface  $resolver
-     * @return void
+     * @param  ConnectionResolverInterface  $resolver
      */
-    public static function setConnectionResolver(Resolver $resolver)
+    public static function setConnectionResolver(ConnectionResolverInterface $resolver)
     {
         static::$resolver = $resolver;
     }
