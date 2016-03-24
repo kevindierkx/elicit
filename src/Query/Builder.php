@@ -154,7 +154,7 @@ class Builder
      * Set the path which the query is targeting.
      *
      * @param  array  $paths
-     * @return $this
+     * @return self
      */
     public function from(array $path)
     {
@@ -168,7 +168,7 @@ class Builder
      *
      * @param  string  $column
      * @param  mixed   $value
-     * @return $this
+     * @return self
      */
     public function where($column, $value = null)
     {
@@ -209,7 +209,7 @@ class Builder
      * Merge another query builder wheres with the query builder wheres.
      *
      * @param  \Kevindierkx\Elicit\Query\Builder|static $query
-     * @return $this
+     * @return self
      */
     public function addNestedWhereQuery($query)
     {
@@ -227,7 +227,7 @@ class Builder
      *
      * @param  string  $method
      * @param  string  $parameters
-     * @return $this
+     * @return self
      */
     public function dynamicWhere($method, $parameters)
     {
@@ -270,7 +270,7 @@ class Builder
      *
      * @param  string  $column
      * @param  mixed   $value
-     * @return $this
+     * @return self
      */
     public function postField($column, $value = null)
     {
@@ -311,7 +311,7 @@ class Builder
      * Merge another query builder body with the query builder body.
      *
      * @param  \Kevindierkx\Elicit\Query\Builder|static $query
-     * @return $this
+     * @return self
      */
     public function addNestedPostFieldQuery($query)
     {

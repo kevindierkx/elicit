@@ -1,14 +1,15 @@
 <?php namespace Kevindierkx\Elicit\Elicit;
 
 use ArrayAccess;
-use Exception;
-use Illuminate\Events\Dispatcher;
-use Illuminate\Support\Contracts\ArrayableInterface;
-use Illuminate\Support\Contracts\JsonableInterface;
+use JsonSerializable;
 use Kevindierkx\Elicit\ConnectionResolverInterface;
+use Kevindierkx\Elicit\Dispatcher\EventDispatcherInterface;
+use Kevindierkx\Elicit\Elicit\Collection;
+use Kevindierkx\Elicit\Elicit\Exception\ModelNotFoundException;
 use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
+use RuntimeException;
 
-abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterface
+abstract class Model implements ArrayAccess, JsonSerializable
 {
     /**
      * The connection name for the model.
@@ -50,28 +51,28 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      *
      * @var array
      */
-    protected $hidden = array();
+    protected $hidden = [];
 
     /**
      * The attributes that should be visible in arrays.
      *
      * @var array
      */
-    protected $visible = array();
+    protected $visible = [];
 
     /**
      * The model's attributes.
      *
      * @var array
      */
-    protected $attributes = array();
+    protected $attributes = [];
 
     /**
      * The model attribute's original state.
      *
      * @var array
      */
-    protected $original = array();
+    protected $original = [];
 
     /**
      * Indicates if the model exists.
@@ -97,7 +98,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * The event dispatcher instance.
      *
-     * @var \Illuminate\Contracts\Events\Dispatcher
+     * @var EventDispatcherInterface
      */
     protected static $dispatcher;
 
@@ -106,14 +107,14 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      *
      * @var array
      */
-    protected static $booted = array();
+    protected static $booted = [];
 
     /**
      * The cache of the mutated attributes for each class.
      *
      * @var array
      */
-    protected static $mutatorCache = array();
+    protected static $mutatorCache = [];
 
     /**
      * Create a new API model instance.
@@ -121,7 +122,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * @param  array  $attributes
      * @return void
      */
-    public function __construct(array $attributes = array())
+    public function __construct(array $attributes = [])
     {
         $this->bootIfNotBooted();
 
@@ -159,7 +160,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     {
         $class = get_called_class();
 
-        static::$mutatorCache[$class] = array();
+        static::$mutatorCache[$class] = [];
 
         // Here we will extract all of the mutated attributes so that we can quickly
         // spin through them after we export models to their array form, which we
@@ -173,29 +174,13 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
                 static::$mutatorCache[$class][] = lcfirst($matches[1]);
             }
         }
-
-        static::bootTraits();
-    }
-
-    /**
-     * Boot all of the bootable traits on the model.
-     *
-     * @return void
-     */
-    protected static function bootTraits()
-    {
-        foreach (class_uses_recursive(get_called_class()) as $trait) {
-            if (method_exists(get_called_class(), $method = 'boot'.class_basename($trait))) {
-                forward_static_call([get_called_class(), $method]);
-            }
-        }
     }
 
     /**
      * Fill the model with an array of attributes.
      *
      * @param  array  $attributes
-     * @return $this
+     * @return self
      */
     public function fill(array $attributes)
     {
@@ -207,10 +192,9 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     }
 
     /**
-     * Get all of the models from the database.
+     * Get all of the models from the API.
      *
-     * @param  array  $columns
-     * @return \Kevindierkx\Elicit\Elicit\Collection|static[]
+     * @return Collection|static[]
      */
     public static function all()
     {
@@ -223,7 +207,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Find a model by its primary key.
      *
      * @param  mixed  $id
-     * @return \Illuminate\Support\Collection|static
+     * @return Collection|static
      */
     public static function find($id)
     {
@@ -236,7 +220,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Find a model by its primary key or return new static.
      *
      * @param  mixed  $id
-     * @return \Illuminate\Support\Collection|static
+     * @return Collection|static
      */
     public static function findOrNew($id)
     {
@@ -251,9 +235,8 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Find a model by its primary key or throw an exception.
      *
      * @param  mixed  $id
-     * @return \Illuminate\Support\Collection|static
-     *
-     * @throws \Kevindierkx\Elicit\Elicit\ModelNotFoundException
+     * @return Collection|static
+     * @throws ModelNotFoundException
      */
     public static function findOrFail($id)
     {
@@ -271,7 +254,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * @param  bool   $exists
      * @return static
      */
-    public function newInstance($attributes = array(), $exists = false)
+    public function newInstance($attributes = [], $exists = false)
     {
         // This method just provides a convenient way for us to generate fresh model
         // instances of this current model. It is particularly useful during the
@@ -289,9 +272,9 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * @param  array  $attributes
      * @return static
      */
-    public function newFromBuilder($attributes = array())
+    public function newFromBuilder($attributes = [])
     {
-        $instance = $this->newInstance(array(), true);
+        $instance = $this->newInstance([], true);
 
         $instance->setRawAttributes((array) $attributes, true);
 
@@ -343,12 +326,12 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Delete the model.
      *
      * @return bool|null
-     * @throws \Exception
+     * @throws RuntimeException
      */
     public function delete()
     {
         if (is_null($this->primaryKey) ||  is_null($this->getKey())) {
-            throw new Exception("No primary key defined on model.");
+            throw new RuntimeException("No primary key defined on model.");
         }
 
         if ($this->exists) {
@@ -443,9 +426,9 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Create a new Elicit Collection instance.
      *
      * @param  array  $models
-     * @return \Kevindierkx\Elicit\Elicit\Collection
+     * @return Collection
      */
-    public function newCollection(array $models = array())
+    public function newCollection(array $models = [])
     {
         return new Collection($models);
     }
@@ -684,7 +667,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Set the connection associated with the model.
      *
      * @param  string  $name
-     * @return $this
+     * @return self
      */
     public function setConnection($name)
     {
@@ -697,7 +680,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Resolve a connection instance.
      *
      * @param  string  $connection
-     * @return \Kevindierkx\Elicit\Connection\ConnectionInterface
+     * @return ConnectionInterface
      */
     public static function resolveConnection($connection = null)
     {
@@ -718,6 +701,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Set the connection resolver instance.
      *
      * @param  ConnectionResolverInterface  $resolver
+     * @return void
      */
     public static function setConnectionResolver(ConnectionResolverInterface $resolver)
     {
@@ -737,7 +721,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * Get the event dispatcher instance.
      *
-     * @return \Illuminate\Contracts\Events\Dispatcher
+     * @return EventDispatcherInterface
      */
     public static function getEventDispatcher()
     {
@@ -747,10 +731,9 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * Set the event dispatcher instance.
      *
-     * @param  \Illuminate\Contracts\Events\Dispatcher  $dispatcher
-     * @return void
+     * @param  EventDispatcherInterface  $dispatcher
      */
-    public static function setEventDispatcher(Dispatcher $dispatcher)
+    public static function setEventDispatcher(EventDispatcherInterface $dispatcher)
     {
         static::$dispatcher = $dispatcher;
     }
@@ -796,7 +779,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     /**
      * Sync the original attributes with the current.
      *
-     * @return $this
+     * @return self
      */
     public function syncOriginal()
     {
@@ -809,7 +792,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
      * Sync a single original attribute with its current value.
      *
      * @param  string  $attribute
-     * @return $this
+     * @return self
      */
     public function syncOriginalAttribute($attribute)
     {
@@ -968,7 +951,7 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
             return static::$mutatorCache[$class];
         }
 
-        return array();
+        return [];
     }
 
     /**
@@ -995,14 +978,14 @@ abstract class Model implements ArrayAccess, ArrayableInterface, JsonableInterfa
     }
 
     /**
-     * Convert the model instance to JSON.
+     * Convert the object to its JSON representation.
      *
      * @param  int  $options
      * @return string
      */
     public function toJson($options = 0)
     {
-        return json_encode($this->toArray(), $options);
+        return json_encode($this, $options);
     }
 
     /**

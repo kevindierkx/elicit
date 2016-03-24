@@ -13,7 +13,7 @@ class ModelNotFoundException extends \RuntimeException
      * Set the affected Eloquent model.
      *
      * @param  string   $model
-     * @return $this
+     * @return self
      */
     public function setModel($model)
     {

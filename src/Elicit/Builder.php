@@ -1,6 +1,6 @@
 <?php namespace Kevindierkx\Elicit\Elicit;
 
-use Closure;
+use Kevindierkx\Elicit\Elicit\Exception\ModelNotFoundException;
 use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
 
 class Builder
@@ -8,14 +8,14 @@ class Builder
     /**
      * The base query builder instance.
      *
-     * @var \Kevindierkx\Elicit\Query\Builder
+     * @var QueryBuilder
      */
     protected $query;
 
     /**
      * The model being queried.
      *
-     * @var \PCextreme\AosManagerClient\Elicit\Model
+     * @var Model
      */
     protected $model;
 
@@ -29,7 +29,7 @@ class Builder
     /**
      * Create a new Eloquent query builder instance.
      *
-     * @param  \Kevindierkx\Elicit\Query\Builder  $query
+     * @param  QueryBuilder  $query
      * @return void
      */
     public function __construct(QueryBuilder $query)
@@ -41,7 +41,7 @@ class Builder
      * Find a model by its primary key.
      *
      * @param  mixed  $id
-     * @return \Kevindierkx\Elicit\Elicit\Model|static|null
+     * @return Model|static|null
      */
     public function find($id)
     {
@@ -55,9 +55,9 @@ class Builder
      *
      * @param  mixed  $id
      * @param  array  $columns
-     * @return \Kevindierkx\Elicit\Elicit\Model|static
+     * @return Model|static
      *
-     * @throws \Kevindierkx\Elicit\Elicit\ModelNotFoundException
+     * @throws ModelNotFoundException
      */
     public function findOrFail($id)
     {
@@ -71,7 +71,7 @@ class Builder
     /**
      * Execute a "show" on the API and get the first result.
      *
-     * @return \Kevindierkx\Elicit\Elicit\Model|static|null
+     * @return Model|static|null
      */
     public function first()
     {
@@ -85,8 +85,8 @@ class Builder
     /**
      * Execute a "show" on the API and get the first result or throw an exception.
      *
-     * @return \Kevindierkx\Elicit\Elicit\Model|static
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException
+     * @return Model|static
+     * @throws ModelNotFoundException
      */
     public function firstOrFail()
     {
@@ -100,7 +100,7 @@ class Builder
     /**
      * Execute an "index" on the API.
      *
-     * @return \Kevindierkx\Elicit\Elicit\Collection|static
+     * @return Collection|static
      */
     public function get()
     {
@@ -135,8 +135,7 @@ class Builder
     /**
      * Get the hydrated models.
      *
-     * @param  array  $columns
-     * @return \Kevindierkx\Elicit\Elicit\Model
+     * @return Model
      */
     public function getModels()
     {
@@ -164,7 +163,7 @@ class Builder
     /**
      * Get the underlying query builder instance.
      *
-     * @return \Kevindierkx\Elicit\Query\Builder|static
+     * @return QueryBuilder|static
      */
     public function getQuery()
     {
@@ -174,7 +173,7 @@ class Builder
     /**
      * Set the underlying query builder instance.
      *
-     * @param  \Kevindierkx\Elicit\Query\Builder  $query
+     * @param  QueryBuilder  $query
      * @return void
      */
     public function setQuery($query)
@@ -185,7 +184,7 @@ class Builder
     /**
      * Get the model instance being queried.
      *
-     * @return \Kevindierkx\Elicit\Elicit\Model
+     * @return Model
      */
     public function getModel()
     {
@@ -195,8 +194,8 @@ class Builder
     /**
      * Set a model instance for the model being queried.
      *
-     * @param  \Kevindierkx\Elicit\Elicit\Model  $model
-     * @return $this
+     * @param  Model  $model
+     * @return self
      */
     public function setModel(Model $model)
     {

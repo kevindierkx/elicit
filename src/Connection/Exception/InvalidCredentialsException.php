@@ -17,7 +17,7 @@ class InvalidCredentialsException extends RuntimeException
      * Set the affected connection.
      *
      * @param  string   $connection
-     * @return $this
+     * @return self
      */
     public function setConnection($connection)
     {

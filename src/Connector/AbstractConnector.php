@@ -102,7 +102,7 @@ abstract class AbstractConnector
      */
     protected function prepareMethod(array $query)
     {
-        return array_get($query, 'from.method');
+        return isset($query['from']['method']) ? $query['from']['method'] : null;
     }
 
     /**
@@ -113,17 +113,17 @@ abstract class AbstractConnector
      */
     protected function prepareRequestUrl(array $query)
     {
-        $wheres = array_get($query, 'wheres');
+        $path = isset($query['from']['path']) ? $query['from']['path'] : null;
 
-        $baseUrl = $this->host . array_get($query, 'from.path');
+        $wheres = isset($query['wheres']) ? $query['wheres'] : null;
 
-        $hasWheres = ! empty($wheres);
+        $baseUrl = $this->host.$path;
 
         // Here we validate that there are any wheres in the
         // request. When none are provided we will return the
         // Request Url without the question mark.
-        if ($hasWheres) {
-            return $baseUrl . '?' . array_get($query, 'wheres');
+        if (! is_null($wheres)) {
+            return $baseUrl.'?'.$wheres;
         }
 
         return $baseUrl;
@@ -155,12 +155,12 @@ abstract class AbstractConnector
      */
     protected function prepareBody(array $query)
     {
-        $isPostMethod = array_get($query, 'from.method') == 'POST';
+        $method = isset($query['from']['method']) ? $query['from']['method'] : null;
 
-        if ($isPostMethod) {
+        if ($method === 'POST') {
             // The query grammar already parsed the body for us.
             // We return the value of the query and guzzle does the rest.
-            return array_get($query, 'body');
+            return isset($query['body']) ? $query['body'] : null;
         }
     }
 
