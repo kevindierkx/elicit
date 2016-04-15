@@ -57,6 +57,29 @@ class Collection implements ArrayAccess
     }
 
     /**
+     * Run a filter over each of the items.
+     *
+     * @param  callable|null  $callback
+     * @return static
+     */
+    public function filter(callable $callback = null)
+    {
+        if ($callback) {
+            $return = [];
+
+            foreach ($this->items as $key => $value) {
+                if ($callback($value, $key)) {
+                    $return[$key] = $value;
+                }
+            }
+
+            return new static($return);
+        }
+
+        return new static(array_filter($this->items));
+    }
+
+    /**
      * Execute a callback over each item.
      *
      * @param  callable  $callback
