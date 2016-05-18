@@ -47,13 +47,13 @@ class ApiManager
     /**
      * Register a connection with the connection factory.
      *
-     * @param  array   $config
+     * @param  array   $options
      * @param  string  $name
      * @return self
      */
-    public function addConnection(array $config, $name = 'default')
+    public function addConnection(array $options, $name = 'default')
     {
-        $this->connectionFactory->addConnection($config, $name);
+        $this->connectionFactory->addConnection($options, $name);
 
         return $this;
     }

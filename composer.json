@@ -1,11 +1,7 @@
 {
     "name": "kevindierkx/elicit",
     "description": "API toolset",
-    "keywords": [
-        "kevindierkx",
-        "elicit",
-        "api"
-    ],
+    "keywords": ["kevindierkx", "elicit", "api"],
     "authors": [
         {
             "name": "Kevin Dierkx",
@@ -13,8 +9,8 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "guzzlehttp/guzzle": "~4.2"
+        "php": ">=5.3.9",
+        "guzzlehttp/guzzle": "~6.0"
     },
     "autoload": {
         "psr-4": {

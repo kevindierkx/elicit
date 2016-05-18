@@ -1,10 +1,11 @@
-<?php namespace Kevindierkx\Elicit\Query\Grammars;
+<?php
+
+namespace Kevindierkx\Elicit\Query\Grammars;
 
 use Kevindierkx\Elicit\Query\Builder;
 
 class Grammar extends AbstractGrammar
 {
-
     /**
      * The components that make up a request.
      *
@@ -61,7 +62,7 @@ class Grammar extends AbstractGrammar
     protected function compileFrom(Builder $query, array $from)
     {
         $method = $from['method'];
-        $path = $from['path'];
+        $path   = $from['path'];
 
         $hasNamedParameters = $this->hasNamedParameters($path);
 

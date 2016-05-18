@@ -118,31 +118,60 @@ abstract class AbstractConnection
     }
 
     /**
-     * {@inheritdoc}
+     * Prepare request from query.
+     *
+     * TODO: This should be moved.
      */
     public function request(array $query)
     {
         return $this->run($query, function ($query) {
-            $connector = $this->getConnector()->prepare($query);
+            $connector = $this->getConnector();
 
-            return $connector->execute();
+            $method  = $this->getMethod($query);
+            $url     = $this->getUrl($query);
+            $options = $this->getOptions($query);
+
+            $request  = $connector->getRequest($method, $url, $options);
+            $response = $connector->getResponse($request);
+
+            return $response;
         });
+    }
+
+    // TODO: Replace with query object directly calling the grammar.
+    private function getMethod(array $query)
+    {
+        return $query['from']['method'];
+    }
+
+    // TODO: Replace with query object directly calling the grammar.
+    private function getUrl(array $query)
+    {
+        $url    = rtrim($this->getConnector()->getBaseApiUrl(), '/');
+        $path   = isset($query['from']['path']) && ! is_null($query['from']['path']) ? '/'.ltrim($query['from']['path'], '/') : null;
+        $wheres = isset($query['wheres']) && ! is_null($query['wheres']) ? '?'.ltrim($query['wheres'], '?') : null;
+
+        return $url.$path.$wheres;
+    }
+
+    // TODO: Replace with query object directly calling the grammar.
+    private function getOptions(array $query)
+    {
+        return [];
     }
 
     /**
      * Run a SQL statement and log its execution context.
      *
-     * @param  array     $query
-     * @param  \Closure  $callback
+     * @param  array    $query
+     * @param  Closure  $callback
      * @return array
      */
     protected function run(array $query, Closure $callback)
     {
         $start = microtime(true);
 
-        // Here we will run this query. If an exception occurs we'll determine a
-        // few basic scenarios and create an appropriate response for them.
-        $result = $this->runQueryCallback($query, $callback);
+        $result = $callback($query);
 
         // Once we have ran the query we will calculate the time that it took to run and
         // then log the query and execution time so we will report them on
@@ -167,41 +196,41 @@ abstract class AbstractConnection
      * @throws \GuzzleHttp\Exception\ClientException  400 Errors
      * @throws \GuzzleHttp\Exception\TooManyRedirectsException
      */
-    protected function runQueryCallback(array $query, Closure $callback)
-    {
-        try {
-            $result = $callback($query);
-        } catch (ClientException $e) {
-            $statusCode = $e->getResponse()->getStatusCode();
-
-            switch ($statusCode) {
-                // When we receive a 401 status code from the API well assume
-                // we are not authorized to see the resource. When using OAuth
-                // we could try to fetch a new token from the API before stopping.
-                case '401':
-                    throw (new InvalidCredentialsException)->setConnection($this->config['name']);
-
-                // When we receive a 404 status code from the API well assume
-                // the resource was not found. Returning an empty array here
-                // will make it possible to use the findOrFail from the Elicit model.
-                case '404':
-                    return array();
-
-                default:
-                    throw $e;
-            }
-        } catch (ServerException $e) {
-            throw new QueryException($query, $e);
-        }
-
-        return $result;
-    }
+    // protected function runQueryCallback(array $query, Closure $callback)
+    // {
+    //     try {
+    //         $result = $callback($query);
+    //     } catch (ClientException $e) {
+    //         $statusCode = $e->getResponse()->getStatusCode();
+    //
+    //         switch ($statusCode) {
+    //             // When we receive a 401 status code from the API well assume
+    //             // we are not authorized to see the resource. When using OAuth
+    //             // we could try to fetch a new token from the API before stopping.
+    //             case '401':
+    //                 throw (new InvalidCredentialsException)->setConnection($this->config['name']);
+    //
+    //             // When we receive a 404 status code from the API well assume
+    //             // the resource was not found. Returning an empty array here
+    //             // will make it possible to use the findOrFail from the Elicit model.
+    //             case '404':
+    //                 return array();
+    //
+    //             default:
+    //                 throw $e;
+    //         }
+    //     } catch (ServerException $e) {
+    //         throw new QueryException($query, $e);
+    //     }
+    //
+    //     return $result;
+    // }
 
     /**
      * Log a query in the connection's query log.
      *
-     * @param  string  $query
-     * @param  $time
+     * @param  string    $query
+     * @param  int|null  $time
      * @return void
      */
     public function logQuery($query, $time = null)
@@ -220,7 +249,7 @@ abstract class AbstractConnection
     /**
      * Get the elapsed time since a given starting point.
      *
-     * @param  int    $start
+     * @param  int  $start
      * @return float
      */
     protected function getElapsedTime($start)

@@ -104,12 +104,10 @@ class Builder
      */
     public function get()
     {
-        $hasFrom = ! is_null($this->query->from);
-
         // When no from has been specified at this point the developer
         // tries to do a basic where query. In this case we want to use the index
         // path, since the index path is supposed to return collections.
-        if (! $hasFrom) {
+        if (is_null($this->query->from)) {
             $path = $this->model->getPath('index');
             $this->query->from($path);
         }
@@ -128,8 +126,7 @@ class Builder
     {
         $path = $this->model->getPath('destroy');
 
-        return $this->query->from($path)
-                ->delete();
+        return $this->query->from($path)->delete();
     }
 
     /**

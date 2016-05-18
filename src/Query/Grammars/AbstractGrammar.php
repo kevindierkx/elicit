@@ -1,8 +1,9 @@
-<?php namespace Kevindierkx\Elicit\Query\Grammars;
+<?php
+
+namespace Kevindierkx\Elicit\Query\Grammars;
 
 abstract class AbstractGrammar
 {
-
     /**
      * The parameters that are used for the path.
      *
