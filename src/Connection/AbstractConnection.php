@@ -127,15 +127,28 @@ abstract class AbstractConnection
         return $this->run($query, function ($query) {
             $connector = $this->getConnector();
 
+            $auth    = $this->getAuth($query);
             $method  = $this->getMethod($query);
             $url     = $this->getUrl($query);
             $options = $this->getOptions($query);
 
-            $request  = $connector->getRequest($method, $url, $options);
+            if ($auth) {
+                $token   = $connector->getAccessToken();
+                $request = $connector->getAuthenticatedRequest($method, $url, $token, $options);
+            } else {
+                $request = $connector->getRequest($method, $url, $options);
+            }
+
             $response = $connector->getResponse($request);
 
             return $response;
         });
+    }
+
+    // TODO: Replace with query object directly calling the grammar.
+    private function getAuth(array $query)
+    {
+        return $query['from']['auth'];
     }
 
     // TODO: Replace with query object directly calling the grammar.
@@ -147,7 +160,7 @@ abstract class AbstractConnection
     // TODO: Replace with query object directly calling the grammar.
     private function getUrl(array $query)
     {
-        $url    = rtrim($this->getConnector()->getBaseApiUrl(), '/');
+        $url    = rtrim($this->getConnector()->getBaseDomain(), '/');
         $path   = isset($query['from']['path']) && ! is_null($query['from']['path']) ? '/'.ltrim($query['from']['path'], '/') : null;
         $wheres = isset($query['wheres']) && ! is_null($query['wheres']) ? '?'.ltrim($query['wheres'], '?') : null;
 

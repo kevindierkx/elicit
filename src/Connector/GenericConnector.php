@@ -11,7 +11,7 @@ class GenericConnector extends AbstractConnector
     /**
      * @var string
      */
-    private $urlApi;
+    private $domain;
 
     /**
      * @var string
@@ -66,16 +66,24 @@ class GenericConnector extends AbstractConnector
     protected function getRequiredOptions()
     {
         return [
-            'urlApi',
+            'domain',
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function getBaseApiUrl()
+    public function getBaseDomain()
     {
-        return $this->urlApi;
+        return $this->domain;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getAccessToken()
+    {
+        return null;
     }
 
     /**

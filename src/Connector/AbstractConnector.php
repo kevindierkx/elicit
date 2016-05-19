@@ -132,11 +132,18 @@ abstract class AbstractConnector
     }
 
     /**
-     * Returns the base URL.
+     * Returns the base domain.
      *
      * @return string
      */
-    abstract public function getBaseApiUrl();
+    abstract public function getBaseDomain();
+
+    /**
+     * Returns the access token.
+     *
+     * @return string
+     */
+    abstract public function getAccessToken();
 
     /**
      * Returns a PSR-7 request instance that is not authenticated.

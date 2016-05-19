@@ -47,6 +47,13 @@ abstract class Model implements ArrayAccess, JsonSerializable
     ];
 
     /**
+     * The paths that should be authenticated.
+     *
+     * @var array
+     */
+    protected $authenticate = ['index', 'show', 'store', 'update', 'destroy', 'options'];
+
+    /**
      * The attributes that should be hidden for arrays.
      *
      * @var array
@@ -497,8 +504,9 @@ abstract class Model implements ArrayAccess, JsonSerializable
      * @param string  $path
      * @param string  $value
      * @param mixed   $method
+     * @param bool    $auth
      */
-    public function setPath($path, $value = null, $method = null)
+    public function setPath($path, $value = null, $method = null, $auth = false)
     {
         $this->paths[$path] = [];
 
@@ -508,6 +516,10 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
         if (! is_null($method)) {
             $this->paths[$path]['method'] = $method;
+        }
+
+        if ($auth) {
+            $this->paths[$path]['auth'] = $auth;
         }
     }
 
@@ -538,6 +550,21 @@ abstract class Model implements ArrayAccess, JsonSerializable
 
         if (isset($path['method'])) {
             return $path['method'];
+        }
+    }
+
+    /**
+     * Get a path auth from the model.
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    public function getPathAuth($key)
+    {
+        $path = $this->getMergedPath($key);
+
+        if (isset($path['auth'])) {
+            return $path['auth'];
         }
     }
 
@@ -574,6 +601,8 @@ abstract class Model implements ArrayAccess, JsonSerializable
         $hasDefault  = isset($this->defaults[$key]);
         $hasPath     = isset($this->paths[$key]);
 
+        $shouldAuthenticate = in_array($key, $this->authenticate);
+
         // Before we try merging paths we check the defaults
         // for a catch all and a default for the requested path.
         if ($hasCatchAll && $hasDefault) {
@@ -591,6 +620,8 @@ abstract class Model implements ArrayAccess, JsonSerializable
         elseif ($hasDefault) {
             $mergedPath = $this->defaults[$key];
         }
+
+        $mergedPath['auth'] = $shouldAuthenticate;
 
         // Lastly when a specific path configuration exists for
         // the requested path we merge it with the 'base' path.

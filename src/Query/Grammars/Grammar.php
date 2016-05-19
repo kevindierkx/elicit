@@ -11,16 +11,16 @@ class Grammar extends AbstractGrammar
      *
      * @var array
      */
-    protected $requestComponents = array(
+    protected $requestComponents = [
         'from',
         'wheres',
         'body',
-    );
+    ];
 
     /**
      * Compile the query for the request.
      *
-     * @param  \Kevindierkx\Elicit\Query\Builder
+     * @param  Builder
      * @return array
      */
     public function compileRequest(Builder $query)
@@ -31,7 +31,7 @@ class Grammar extends AbstractGrammar
     /**
      * Compile the components necessary for the request.
      *
-     * @param  \Kevindierkx\Elicit\Query\Builder
+     * @param  Builder
      * @return array
      */
     protected function compileComponents(Builder $query)
@@ -55,7 +55,7 @@ class Grammar extends AbstractGrammar
     /**
      * Compile the "from" portion of the query.
      *
-     * @param  \Kevindierkx\Elicit\Query\Builder $query
+     * @param  Builder $query
      * @param  array $from
      * @return string
      */
@@ -63,6 +63,7 @@ class Grammar extends AbstractGrammar
     {
         $method = $from['method'];
         $path   = $from['path'];
+        $auth   = $from['auth'];
 
         $hasNamedParameters = $this->hasNamedParameters($path);
 
@@ -75,13 +76,13 @@ class Grammar extends AbstractGrammar
             $path = $this->replaceNamedParameters($path, $wheres);
         }
 
-        return compact('method', 'path');
+        return compact('method', 'path', 'auth');
     }
 
     /**
      * Compile the "where" portions of the query.
      *
-     * @param  \Kevindierkx\Elicit\Query\Builder $query
+     * @param  Builder $query
      * @return string
      */
     protected function compileWheres(Builder $query)
@@ -125,7 +126,7 @@ class Grammar extends AbstractGrammar
     /**
      * Compile the "body" portions of the query.
      *
-     * @param  \Kevindierkx\Elicit\Query\Builder $query
+     * @param  Builder $query
      * @return string
      */
     protected function compileBody(Builder $query)
