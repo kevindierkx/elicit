@@ -14,6 +14,15 @@ class GenericConnector extends AbstractConnector
     private $urlApi;
 
     /**
+     * @var string
+     */
+    private $responseError = 'error';
+    /**
+     * @var string
+     */
+    private $responseCode;
+
+    /**
      * Create a new instance of the GenericConnector.
      *
      * @param  array  $options
@@ -37,19 +46,6 @@ class GenericConnector extends AbstractConnector
     }
 
     /**
-     * Establish an API connection.
-     *
-     * @param  array  $config
-     * @return self
-     */
-    // public function connect(array $config)
-    // {
-    //     $connection = $this->createConnection($config);
-    //
-    //     return $connection;
-    // }
-
-    /**
      * Returns all options that can be configured.
      *
      * @return array
@@ -57,7 +53,8 @@ class GenericConnector extends AbstractConnector
     protected function getConfigurableOptions()
     {
         return array_merge($this->getRequiredOptions(), [
-            // Holds options that could be defined on the class.
+            'responseError',
+            'responseCode',
         ]);
     }
 
@@ -104,7 +101,7 @@ class GenericConnector extends AbstractConnector
      */
     protected function checkResponse(ResponseInterface $response, $data)
     {
-        if (!empty($data[$this->responseError])) {
+        if (! empty($data[$this->responseError])) {
             $error = $data[$this->responseError];
             $code  = $this->responseCode ? $data[$this->responseCode] : 0;
 
