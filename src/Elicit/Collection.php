@@ -3,8 +3,11 @@
 namespace Kevindierkx\Elicit\Elicit;
 
 use ArrayAccess;
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
 
-class Collection implements ArrayAccess
+class Collection implements ArrayAccess, Countable, IteratorAggregate
 {
     /**
      * The items contained in the collection.
@@ -173,6 +176,26 @@ class Collection implements ArrayAccess
     public function isEmpty()
     {
         return empty($this->items);
+    }
+
+    /**
+     * Get an iterator for the items.
+     *
+     * @return \ArrayIterator
+     */
+    public function getIterator()
+    {
+        return new ArrayIterator($this->items);
+    }
+
+    /**
+     * Count the number of items in the collection.
+     *
+     * @return int
+     */
+    public function count()
+    {
+        return count($this->items);
     }
 
     /**
