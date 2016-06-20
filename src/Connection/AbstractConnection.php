@@ -11,9 +11,12 @@ use Kevindierkx\Elicit\Connector\AbstractConnector;
 use Kevindierkx\Elicit\Query\Grammars\Grammar;
 use Kevindierkx\Elicit\Query\Processors\Processor;
 use Kevindierkx\Elicit\QueryException;
+use Kevindierkx\Elicit\Tool\QueryBuilderTrait;
 
 abstract class AbstractConnection
 {
+    use QueryBuilderTrait;
+
     /**
      * The active connector instance.
      *
@@ -170,7 +173,11 @@ abstract class AbstractConnection
     // TODO: Replace with query object directly calling the grammar.
     private function getOptions(array $query)
     {
-        return [];
+        $body = isset($query['body']) ? $this->buildQueryString($query['body']) : null;
+
+        return [
+            'body' => $body,
+        ];
     }
 
     /**
