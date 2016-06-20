@@ -94,8 +94,14 @@ class ConnectionFactory
     {
         $provider = isset($options['provider']) ? $options['provider'] : null;
 
+        if (empty($options['collaborators'])) {
+            $options['collaborators'] = [];
+        }
+        $collaborators = $options['collaborators'];
+        unset($options['collaborators']);
+
         if (! is_null($provider)) {
-            $provider = is_string($provider) ? new $provider($options) : $provider;
+            $provider = is_string($provider) ? new $provider($options, $collaborators) : $provider;
 
             if (! $provider instanceof AbstractConnector) {
                 throw new RepositoryException("Class {$provider} must be an instance of Kevindierkx\\Elicit\\Connector\\AbstractConnector");
@@ -104,7 +110,7 @@ class ConnectionFactory
             return $provider;
         }
 
-        return new GenericConnector($options);
+        return new GenericConnector($options, $collaborators);
     }
 
     /**
