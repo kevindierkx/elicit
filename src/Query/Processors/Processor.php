@@ -16,7 +16,7 @@ class Processor
         // Here we validate the results being returned to be associative.
         // When they are not we wrap them in an array making it easier for
         // elicit to them parse as a model.
-        if (array_keys($results) !== range(0, count($results) - 1)) {
+        if (! empty($results) && array_keys($results) !== range(0, count($results) - 1)) {
             return [$results];
         }
 

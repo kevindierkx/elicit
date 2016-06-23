@@ -165,7 +165,7 @@ abstract class AbstractConnection
     {
         $url    = rtrim($this->getConnector()->getBaseDomain(), '/');
         $path   = isset($query['from']['path']) && ! is_null($query['from']['path']) ? '/'.ltrim($query['from']['path'], '/') : null;
-        $wheres = isset($query['wheres']) && ! is_null($query['wheres']) ? '?'.ltrim($query['wheres'], '?') : null;
+        $wheres = isset($query['wheres']) && ! empty($query['wheres']) ? '?'.ltrim($query['wheres'], '?') : null;
 
         return $url.$path.$wheres;
     }
