@@ -1,11 +1,14 @@
-<?php namespace Kevindierkx\Elicit\Elicit;
+<?php
+
+namespace Kevindierkx\Elicit\Elicit;
 
 use ArrayAccess;
+use InvalidArgumentException;
 use JsonSerializable;
 use Kevindierkx\Elicit\ConnectionResolverInterface;
-use Kevindierkx\Elicit\Event\EventDispatcherInterface;
 use Kevindierkx\Elicit\Elicit\Collection;
 use Kevindierkx\Elicit\Elicit\Exception\ModelNotFoundException;
+use Kevindierkx\Elicit\Event\EventDispatcherInterface;
 use Kevindierkx\Elicit\Query\Builder as QueryBuilder;
 use RuntimeException;
 
@@ -14,7 +17,7 @@ abstract class Model implements ArrayAccess, JsonSerializable
     /**
      * The connection name for the model.
      *
-     * @var string
+     * @var string|null
      */
     protected $connection;
 
@@ -122,6 +125,13 @@ abstract class Model implements ArrayAccess, JsonSerializable
      * @var array
      */
     protected static $mutatorCache = [];
+
+    /**
+     * The collection class used when creating a new collection.
+     *
+     * @var string
+     */
+    protected static $collectionClass;
 
     /**
      * Create a new API model instance.
@@ -437,7 +447,59 @@ abstract class Model implements ArrayAccess, JsonSerializable
      */
     public function newCollection(array $models = [])
     {
-        return new Collection($models);
+        $collectionClass = static::$collectionClass ? ltrim(static::$collectionClass, '\\') : static::getDefaultCollectionClass();
+
+        return new $collectionClass($models);
+    }
+
+    /**
+     * Return the default collection class.
+     *
+     * @return string
+     */
+    public static function getDefaultCollectionClass()
+    {
+        return Collection::class;
+    }
+
+    /**
+     * Return the collection class.
+     *
+     * @return string|null
+     */
+    public static function getCollectionClass()
+    {
+        return static::$collectionClass;
+    }
+
+    /**
+     * Set the collection class.
+     *
+     * @param  string  $collectionClass
+     * @return void
+     */
+    public static function setCollectionClass($collectionClass)
+    {
+        if (! is_string($collectionClass)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    "\$collectionClass must be of type string, %s given.",
+                    gettype($collectionClass)
+                )
+            );
+        }
+
+        static::$collectionClass = $collectionClass;
+    }
+
+    /**
+     * Unset the collection class.
+     *
+     * @return void
+     */
+    public static function unsetCollectionClass()
+    {
+        static::$collectionClass = null;
     }
 
     /**
