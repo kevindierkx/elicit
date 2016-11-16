@@ -41,9 +41,13 @@ abstract class AbstractGrammar
         return preg_replace_callback('/\{(.*?)\??\}/', function ($m) use ($grammar, $query) {
             $namedParameter = $m[1];
 
-            $parameter = array_first($query, function ($key, $value) use ($namedParameter) {
-                return $value['column'] == $namedParameter;
-            });
+            foreach ($query as $key => $value) {
+                if (call_user_func(function ($key, $value) use ($namedParameter) {
+                    return $value['column'] == $namedParameter;
+                })) {
+                    $parameter = $value;
+                }
+            }
 
             $hasParameter = ! is_null($parameter);
 
