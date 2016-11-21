@@ -44,7 +44,7 @@ abstract class AbstractGrammar
             foreach ($query as $key => $value) {
                 if (call_user_func(function ($key, $value) use ($namedParameter) {
                     return $value['column'] == $namedParameter;
-                })) {
+                }, $key, $value)) {
                     $parameter = $value;
                 }
             }
